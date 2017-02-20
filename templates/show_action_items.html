@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block main %}
+    <form action="time" method="post">
+        <select name="action_items">
+        {% for entry in entries %}
+            <option value="{{ entry.id }}">{{ entry.name }}</option>
+        {% endfor %}
+        </select>
+        <input value="Time Selection" type="submit">
+    </form>
+    <form action="add" method="post">
+    Name: <input type="text" name="name">
+    <input type="submit" value="Submit">
+    </form>
+{% endblock %}

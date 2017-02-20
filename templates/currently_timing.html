@@ -1,0 +1,16 @@
+<table>
+<tr class="selected">
+    <td class="item-buttons">
+    <form method="post">
+        <input type="text" 
+               name="item_id" 
+               style="display: none;" 
+               value="{{ item.id }}" />
+        Currently timing {{ item.name }}
+        <input type="submit" 
+               formaction="{{ url_for('time_action_item') }}" 
+               value="Stop Timing" />
+    </form>
+    </td>
+</tr>
+</table>

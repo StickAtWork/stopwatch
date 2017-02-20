@@ -1,0 +1,21 @@
+<form id="new_action_item" method="post">
+    Name: <input type="text" name="name">
+    Type: <select name="type">
+            {% for t in types %}
+                <option value="{{ t.id }}">{{ t.description }}</option>
+            {%- endfor %}
+        </select> 
+    Rate: <select name="rate">
+            {% for r in rates -%}
+                <option value="{{r.id}}">
+                {{- r.description }} @ ${{ "%0.2f" | format(r.fee_per_hour) -}}
+                </option>
+            {%- endfor %}
+        </select>
+    <input type="text" name="item-id" style="display: none" value="-1">
+    <input type="button"
+            value="New">
+    <input type="submit" 
+           value="Save" 
+           formaction="{{ url_for('add_action_item') }}">
+</form>

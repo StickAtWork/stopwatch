@@ -1,0 +1,17 @@
+<form id="timer" 
+      name="item_id" 
+      action="{{ url_for('time_action_item') }}" 
+      method="post">
+    <input name="time" 
+           value="Start"
+           type="submit" />
+    {% if is_loaded %}
+    Current Ticket: <input readonly
+                             type="text"
+                             name="item_id"
+                             value="{{ is_loaded.id }}">
+    <br/>
+    {% else %}
+    Please select an action item to time.
+    {% endif %}
+</form>

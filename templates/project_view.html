@@ -1,0 +1,18 @@
+<button formaction="{{ url_for('add_project') }}" 
+        formmethod="post">New Project
+</button>
+<table id="projects">
+    <tr>
+        <th>Description</th>
+        <th>Project Number</th>
+        <th>Total Time (minutes)</th>
+    </tr>
+{% for project in projects %}
+    <tr data-row="{{ project.id }}"
+        class="{{ 'selected' if project.id == active else '' }}">
+        <td>{{ project.description }}</td>
+        <td>{{ project.id }}</td>
+        <td>{{ "%.02f" | format(project.project_total or 0) }}</td>
+    </tr>
+{% endfor %}
+</table>

@@ -1,0 +1,38 @@
+* {
+    font-family: HelveticaNeue;
+}
+
+header {
+    text-align: right;
+}
+
+header a {
+    margin-left: 1em;
+}
+
+body {
+    background-color: rgb(40, 40, 40);
+    color: rgb(200, 200, 200);
+}
+
+table tr:nth-child(even) {
+    background-color: rgb(70, 70, 70);
+}
+
+table th {
+    text-align:left;
+    font-size: 14px;
+    font-weight: 100;
+}
+
+a {
+    color: rgb(200, 120, 120);
+}
+
+#main {
+    margin-left: 15%;
+}
+
+tr.selected, tr:nth-child(even).selected {
+    background-color: rgb(80, 140, 80);
+}

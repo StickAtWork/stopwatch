@@ -1,0 +1,40 @@
+{% for phase in phases %}
+    <div class="phase-view">
+    <button class="shutter">{{phase.number}}</button>
+        <div class="indent">
+        {% if phase.phase_total %}
+            <button name="phase_id" 
+                    value="{{ phase.id }}" 
+                    formaction="{{ url_for('bill_phase') }}" 
+                    formmethod="post">
+                    Bill
+            </button>
+            <table>
+                <tr>
+                    <th>Date</th>
+                    <th>Name</th>
+                    <th>Time (Minutes)</th>
+                </tr>
+            {% for record in time_records %}
+                {% if record.phase_id == phase.id %}
+                <tr>
+                    <td>{{ record.date }}</td>
+                    <td>{{ record.name }}</td>
+                    <td>{{ "%.02f" | format(record.total) }}</td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+                <tfoot>
+                    <tr>
+                        <td>Total Time</td>
+                        <td></td>
+                        <td>{{ "%.02f" | format(phase.phase_total) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        {% else %}
+        No time records associated to this phase.
+        {% endif %}
+        </div>
+    </div>
+{% endfor %}

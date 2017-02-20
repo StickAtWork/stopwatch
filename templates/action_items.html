@@ -1,0 +1,23 @@
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Rate</th>
+        <th>Fee Per Hour</th>
+    </tr>
+    {% for item in action_items %}
+    <tr data-id="{{ item.id }}">
+        <td>{{ item.name }}</td>
+        <td>{{ item.type }}</td>
+        <td>{{ item.description }}</td>
+        <td>${{ "%0.2f" | format(item.fee_per_hour) }}</td>
+        <td class="item-buttons">
+            <form method="post">
+            <input type="text" name="item_id" style="display: none;" value="{{ item.id }}" />
+            <input type="submit" value="Time" formaction="{{ url_for('time_action_item') }}" />
+            <input type="submit" value="Delete" formaction="/delete_action_item" />
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>

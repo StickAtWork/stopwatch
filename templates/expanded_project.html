@@ -1,0 +1,34 @@
+<section id="tabs">
+    <div id="action_items">
+        <button class="shutter">Action Items</button>
+        {% include 'item_editor.html' %}
+        <div class="content">
+        {% if action_items %}
+            {% include 'action_items.html' %}
+        {% else %}
+            No items associated to this project.
+        {% endif %}
+        </div>
+    </div>
+    <div id="details">
+        <button class="shutter">Details</button>
+        <div class="content">
+        {% if details %}
+            {% include 'details.html' %}
+        {% else %}
+            No details associated to this project.
+        {% endif %}
+        </div>
+    </div>
+    <div id="phases">
+        <button class="shutter">Phases</button>
+        {% include 'phase_editor.html' %}
+        <div class="content">
+        {% if phases %}
+            {% include 'phases.html' %}
+        {% else %}
+            No phases associated to this project.
+        {% endif %}
+        </div>
+    </div>
+</section>

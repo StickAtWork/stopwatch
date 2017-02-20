@@ -1,0 +1,24 @@
+#popup-bg {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    float: left;
+    background-color: rgba(80, 80, 80, .5);
+}
+
+#popup-window {
+    position: relative;
+    margin-left: 33%;
+    margin-right: 33%;
+    width: 33%;
+    border: 2px solid red;
+    float: left;
+}
+
+#popup-window button {
+    float: right;
+}
+
+.hidden {
+    display: none;
+}

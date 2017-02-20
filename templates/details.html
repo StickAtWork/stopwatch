@@ -1,0 +1,12 @@
+<form>
+Ticket Tracker # 
+<input name="tt_number" 
+       type="text" 
+       value="{{ details.tt_number or 'None' }}">
+<br/>Description
+<input name="description" 
+       type="text" 
+       value="{{ details.description }}">
+<br/>Notes
+<textarea name="notes">{{ details.notes }}</textarea>
+</form>

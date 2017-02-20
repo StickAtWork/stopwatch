@@ -1,0 +1,21 @@
+<div>
+{% if action_items %}
+    {% include 'action_items.html' %}
+{% else %}
+    No items associated to this project. 
+{% endif %}
+</div>
+<div>
+{% if details %}
+    {% include 'details.html' %}
+{% else %}
+    No details for this project. 
+{% endif %}
+</div>
+<div>
+{% if phases %}
+    {% include 'phases.html' %}
+{% else %}
+    No billing phases associated to this project. 
+{% endif %}
+</div>

@@ -1,0 +1,24 @@
+<div style="background-color: rgb(220, 220, 220); color: rgb(0, 0, 0)">
+<h1>Your Bill</h1>
+<table>
+    <tr>
+        <th>Date</th>
+        <th>Name</th>
+        <th>Time (Minutes)</th>
+    </tr>
+{% for record in billed_phase %}
+    <tr>
+        <td>{{ record.date }}</td>
+        <td>{{ record.name }}</td>
+        <td>{{ "%.02f" | format(record.total) }}</td>
+    </tr>
+{% endfor %}
+    <tfoot>
+    <tr>
+        <td>Total Time</td>
+        <td></td>
+        <td>{{ "%.02f" | format(total) }}</td>
+        </tr>
+    </tfoot>
+</table>
+</div>

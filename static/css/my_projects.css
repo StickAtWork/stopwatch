@@ -1,0 +1,85 @@
+#expanded-project {
+  float: left;
+  clear: both;
+  border: 1px solid black;
+  min-width: 50%;
+  background-color: rgb(45, 40, 45);
+  min-height: 5em;
+  margin-top: 2em;
+}
+
+#tabs .content {
+    margin-bottom: 1em;
+}
+
+#tabs .shutter {
+    float: left;
+    clear: both;
+    width: 100%;
+    text-align: left;
+    font-size: 18px;
+    background-color: rgb(70, 70, 70);
+    color: rgb(180, 180, 180);
+}
+
+.shutter:before {
+    content: "\25bc";
+    font-size: 12px;
+    margin-right: 1em;
+}
+
+.shutter.closed:before {
+    content: "\25b6";
+    font-size: 12px;
+    margin-right: 1em;
+}
+
+.item-buttons, .item-buttons form {
+    display: none;
+}
+
+.selected td.item-buttons, .selected td.item-buttons form {
+    display: initial;
+}
+
+#tabs .shutter:active {
+    color: rgb(50, 50, 50);
+}
+
+#item_info {
+    float: left;
+    clear: both;
+}
+
+#details textarea {
+    width: 99%;
+    height: 50px;
+}
+
+#phases .content .shutter {
+    border: none;
+}
+
+#phases .content .indent {
+    margin-left: 1em;
+}
+
+#phases .content thead {
+    font-weight: 200;
+}
+
+#phases .content table td:last-of-type {
+    text-align: right;
+}
+
+#phases .content td {
+    width: 30%;
+}
+
+#phases .content table tfoot {
+    background-color: rgb(80, 80, 100);
+}
+
+#phase-buttons {
+    margin-bottom: 1em;
+}
