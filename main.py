@@ -466,28 +466,59 @@ def update_details():
                             
 @app.route('/bill_phase', methods=['POST'])
 def bill_phase():
+    """Returns an HTML table with an itemized series of timed sessions. 
+    
+    Should include per line item: 
+        name
+        date
+        total minutes spent
+        sub-total (minutes spent * fee per hour)
+        
+    Also should include a grand total for minutes spent and total fee.
+    
+    As of this writing this is not a standalone estimate for any goods or
+    services rendered and still needs to go to accounting as it does not
+    include any of their fees or taxes or anything ancillary to the actual
+    timed action item.
+    """
     db = get_db()
     billed_phase = db.execute("""
         SELECT
-            action_item.name,
-            time_record.phase_id,
-            strftime('%Y-%m-%d', time_record.start) AS date,
-            (strftime('%s', time_record.stop) - strftime('%s', time_record.start)) / 60.0 AS total
+            a.name,
+            a.phase_id,
+            a.date,
+            a.time_total,
+            (item_rate.fee_per_hour / 60.0 )* a.time_total AS money_total
         FROM
-            action_item,
-            time_record
-        WHERE 
-            action_item.id = time_record.action_item_id AND 
-            time_record.phase_id=?
+            item_rate, 
+            (SELECT
+                action_item.name,
+                action_item.rate_id,
+                time_record.phase_id,
+                strftime('%Y-%m-%d', time_record.start) AS date,
+                sum(strftime('%s', stop) - strftime('%s', start))/ 60.0 
+                    AS time_total
+            FROM
+                action_item,
+                time_record
+            WHERE
+                action_item.id = time_record.action_item_id
+                AND time_record.phase_id = ?
+            GROUP BY
+                action_item.id
+            ) AS a
+        WHERE
+            a.rate_id = item_rate.id
         """, [request.data]).fetchall()
-    total = db.execute("""
-            SELECT sum(strftime('%s', stop) - strftime('%s', start)) / 60.0 
-            FROM time_record 
-            WHERE phase_id = ?
-        """, [request.data]).fetchone()[0]
+    # maybe i turn this into a query, someday.
+    # someday...
+    grand_totals = {
+        'time': sum(x['time_total'] for x in billed_phase),
+        'money': sum(y['money_total'] for y in billed_phase)
+    }
     return render_template("billed_phase.html",
                             billed_phase=billed_phase,
-                            total=total)
+                            grand_totals=grand_totals)
 
 @app.teardown_appcontext
 def close_db(error):
@@ -497,4 +528,4 @@ def close_db(error):
 if __name__ == '__main__':
     with app.app_context():
         init_db()
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)

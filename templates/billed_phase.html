@@ -5,19 +5,22 @@
         <th>Date</th>
         <th>Name</th>
         <th>Time (Minutes)</th>
+        <th>Sub-total</th>
     </tr>
 {% for record in billed_phase %}
     <tr>
         <td>{{ record.date }}</td>
         <td>{{ record.name }}</td>
-        <td>{{ "%.02f" | format(record.total) }}</td>
+        <td>{{ "%.02f" | format(record.time_total) }}</td>
+        <td>{{ "$%.02f" | format(record.money_total) }}</td>
     </tr>
 {% endfor %}
     <tfoot>
     <tr>
-        <td>Total Time</td>
+        <td>Total</td>
         <td></td>
-        <td>{{ "%.02f" | format(total) }}</td>
+        <td>{{ "%.02f" | format(grand_totals.time) }}</td>
+        <td>{{ "$%.02f" | format(grand_totals.money) }}</td>
         </tr>
     </tfoot>
 </table>

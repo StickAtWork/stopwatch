@@ -110,6 +110,9 @@ INSERT into user (id, name, password, usergroup_id)
 INSERT into user (id, name, password, usergroup_id)
     VALUES (null, "Stick", "admin", 2);
     
+INSERT INTO user (id, name, password, usergroup_id)
+    VALUES (null, "Marilyn", "123456789", 3);
+    
 
 /* test statuses */
 
