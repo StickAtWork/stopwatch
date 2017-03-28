@@ -7,6 +7,12 @@ Ticket Tracker #
 <input name="description" 
        type="text" 
        value="{{ details.description }}">
+<br/>Status
+<select name="status">
+    {% for s in get_statuses() %}
+        <option value="{{ s.id }}" {{ 'selected' if s.id == details.status_id }}>{{ s.description }}</option>
+    {%- endfor %}
+</select> 
 <br/>Notes
 <textarea name="notes">{{ details.notes }}</textarea>
 </form>

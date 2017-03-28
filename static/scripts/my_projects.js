@@ -168,10 +168,24 @@ $(document).ready(function(){
     
     */
     $exp_proj.on('change', '#details form', function(){
+        var fdata = $(this).serializeArray();
+        $.each(fdata, function(e, i){
+            if (i['name'] == "status" && i['value'] == 1) {
+                //a Closed ticket will have a value of 1
+                //and we will confirm that they actually
+                //want to close it
+                if (confirm("Close this ticket?" + 
+                            "\n\n" + 
+                            "It will disappear from " + 
+                            "your projects list.") === true) {
+                    i['value'] = 2;
+                }
+            }
+        });
         $.ajax({
-           url: "/update_details",
-           method: "POST",
-           data: $(this).serializeArray() 
+            url: "/update_details",
+            method: "POST",
+            data: fdata
         }).success(function(data){
             //should be getting the updated project view back,
             //so that needs to update fer sure

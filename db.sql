@@ -3,8 +3,7 @@ CREATE TABLE action_item (
     name TEXT,
     project_id INTEGER,
     rate_id INTEGER,
-    type_id INTEGER,
-    status_id INTEGER
+    type_id INTEGER
 );
 
 CREATE TABLE time_record (
@@ -31,7 +30,8 @@ CREATE TABLE project (
     tt_number INTEGER,
     user_id INTEGER,
     description TEXT,
-    notes TEXT
+    notes TEXT,
+    status_id INTEGER
 );
 
 CREATE TABLE project_status (
@@ -117,10 +117,10 @@ INSERT INTO user (id, name, password, usergroup_id)
 /* test statuses */
 
 INSERT into project_status (id, description)
-    VALUES (null, 'Open');
+    VALUES (null, 'Closed');
 
 INSERT into project_status (id, description)
-    VALUES (null, 'Closed');
+    VALUES (null, 'Open');
     
 /* test types and rates */
 

@@ -42,6 +42,12 @@ def init_db():
         except sqlite3.OperationalError:
             pass
     db.commit()
+
+@app.teardown_appcontext
+def close_db(error):
+    if hasattr(g, 'sqlite_db'):
+        g.sqlite_db.close()
+
 #
 #   Common functions
 #
@@ -81,7 +87,6 @@ def is_good_request():
     permissed urls. Returns True/False.
     """
     allowed_urls = get_urls_for_user(get_online_user())
-    # print permiss, request.endpoint
     for url in allowed_urls:
         real_url = url[0][1:]
         if request.endpoint == real_url:
@@ -98,7 +103,9 @@ def get_projects_for_user(user_id):
             FROM time_record 
             WHERE project_id = project.id) AS project_total
         FROM project 
-        WHERE user_id = ?
+        WHERE 
+            user_id = ? AND 
+            status_id != 1
         """, [user_id])
     return cur.fetchall()
     
@@ -155,13 +162,33 @@ def get_time_records_for_phases(phases):
         """.format(','.join(str(p['id']) for p in phases)))
     
     return cur.fetchall()
+
+#
+#   functions to call directly from templates
+#
+
+    
+@app.context_processor
+def my_utility_processor():
+    def get_statuses():
+        db = get_db()
+        cur = db.execute("""
+            SELECT *
+            FROM project_status
+        """)
+    
+        return cur.fetchall()
+    
+    return {"get_statuses": get_statuses}
     
 def start_timing(item_id, phase_id):
     db = get_db()
     user = get_online_user()
     new_time = db.execute("""
-        INSERT INTO time_record (id, action_item_id, project_id, phase_id, start, stop)
-        VALUES (null, ?, ?, ?, datetime('now'), null)
+        INSERT INTO 
+            time_record (id, action_item_id, project_id, phase_id, start, stop)
+        VALUES 
+            (null, ?, ?, ?, datetime('now'), null)
         """, [item_id, user['viewing_project_id'], phase_id])
     db.execute("""
         UPDATE online_users 
@@ -233,8 +260,13 @@ def login():
                 # create unique session_id to identify user
                 session['session_id'] = str(uuid4())
                 db.execute("""
-                    INSERT INTO online_users(user_id, session_id, time_record_id, viewing_project_id) 
-                    VALUES (?, ?, null, null)
+                    INSERT INTO 
+                        online_users(user_id, 
+                                    session_id, 
+                                    time_record_id, 
+                                    viewing_project_id) 
+                    VALUES 
+                        (?, ?, null, null)
                     """, [user_id, session['session_id']])
                 db.commit()
                 flash("Welcome, {}".format(name))
@@ -280,16 +312,16 @@ def my_projects():
 def add_project():
     db = get_db()
     user = get_online_user()
+    # a status_id of 1 means Closed, so setting it to 2 is (for now)
+    # the right way to keep the project visible to the user
     db.execute("""
-        INSERT INTO project (id, tt_number, user_id, description, notes)
-        VALUES (null, null, ?, null, null)
+        INSERT INTO 
+            project (id, tt_number, user_id, description, notes, status_id)
+        VALUES 
+            (null, null, ?, null, null, 2)
         """, [user['user_id']])
     db.commit()
-    projects = db.execute("""
-        SELECT * 
-        FROM project 
-        WHERE user_id = ?
-        """, [user['user_id']]).fetchall()
+    projects = get_projects_for_user(user['user_id'])
     return render_template('project_view.html', 
                             projects=projects)
     
@@ -449,13 +481,15 @@ def update_details():
         data['tt_number'] = None
     user = get_online_user()
     data['project_id'] = user['viewing_project_id']
+    print data
     db = get_db()    
     db.execute("""
         UPDATE project
         SET
             tt_number = :tt_number,
             description = :description,
-            notes = :notes
+            notes = :notes,
+            status_id = :status
         WHERE id = :project_id
         """, data)
     db.commit()
@@ -519,11 +553,6 @@ def bill_phase():
     return render_template("billed_phase.html",
                             billed_phase=billed_phase,
                             grand_totals=grand_totals)
-
-@app.teardown_appcontext
-def close_db(error):
-    if hasattr(g, 'sqlite_db'):
-        g.sqlite_db.close()
     
 if __name__ == '__main__':
     with app.app_context():
