@@ -47,6 +47,24 @@ def init_db():
 def close_db(error):
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
+        
+#
+#   functions to call directly from templates
+#
+
+    
+@app.context_processor
+def my_utility_processor():
+    def get_statuses():
+        db = get_db()
+        cur = db.execute("""
+            SELECT *
+            FROM project_status
+        """)
+    
+        return cur.fetchall()
+    
+    return {"get_statuses": get_statuses}
 
 #
 #   Common functions
@@ -162,24 +180,6 @@ def get_time_records_for_phases(phases):
         """.format(','.join(str(p['id']) for p in phases)))
     
     return cur.fetchall()
-
-#
-#   functions to call directly from templates
-#
-
-    
-@app.context_processor
-def my_utility_processor():
-    def get_statuses():
-        db = get_db()
-        cur = db.execute("""
-            SELECT *
-            FROM project_status
-        """)
-    
-        return cur.fetchall()
-    
-    return {"get_statuses": get_statuses}
     
 def start_timing(item_id, phase_id):
     db = get_db()
@@ -409,6 +409,13 @@ def delete_action_item():
     
 @app.route('/time_action_item', methods=['POST'])
 def time_action_item():
+    """Start/stop toggle for timing.
+    
+    Checks the db to see if there's a time_record_id, which means
+    the user is timing. If so, calls stop_timing(). Else, calls start_timing().
+    
+    Returns 'currently_timing.html'.
+    """
     item_to_time = request.form['item_id']
     db = get_db()
     user = get_online_user()
