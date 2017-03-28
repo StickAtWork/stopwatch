@@ -93,7 +93,7 @@ def is_good_request():
             return True
     return False
     
-def get_projects_for_user(user_id):
+def get_projects_for_user(user):
     db = get_db()
     cur = db.execute("""
         SELECT
@@ -106,7 +106,7 @@ def get_projects_for_user(user_id):
         WHERE 
             user_id = ? AND 
             status_id != 1
-        """, [user_id])
+        """, [user['user_id']])
     return cur.fetchall()
     
 def get_project_items(project_id):
@@ -304,7 +304,7 @@ def index():
 @app.route('/my_projects')
 def my_projects():
     user = get_online_user()
-    projects = get_projects_for_user(user['user_id'])
+    projects = get_projects_for_user(user)
     return render_template('my_projects.html', 
                             projects=projects)
                             
@@ -321,7 +321,7 @@ def add_project():
             (null, null, ?, null, null, 2)
         """, [user['user_id']])
     db.commit()
-    projects = get_projects_for_user(user['user_id'])
+    projects = get_projects_for_user(user)
     return render_template('project_view.html', 
                             projects=projects)
     
@@ -493,7 +493,7 @@ def update_details():
         WHERE id = :project_id
         """, data)
     db.commit()
-    projects = get_projects_for_user(user['user_id'])
+    projects = get_projects_for_user(user)
     return render_template("project_view.html", 
                             projects=projects,
                             active=user['viewing_project_id'])
