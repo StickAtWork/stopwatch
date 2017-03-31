@@ -114,7 +114,6 @@ $(document).ready(function(){
     $exp_proj.on('click', "#new_action_item input[value=Save]", function(event) {
         var $this = $(this);
         var fdata = $this.parent().serializeArray();
-        //console.log(fdata);
         $.ajax({
             url: $this.attr("formaction"),
             method: "POST",
@@ -168,20 +167,21 @@ $(document).ready(function(){
     
     */
     $exp_proj.on('change', '#details form', function(){
-        var fdata = $(this).serializeArray();
-        $.each(fdata, function(e, i){
-            if (i['name'] == "status" && i['value'] == 1) {
-                //a Closed ticket will have a value of 1
-                //and we will confirm that they actually
-                //want to close it
-                if (confirm("Close this ticket?" + 
-                            "\n\n" + 
-                            "It will disappear from " + 
-                            "your projects list.") === true) {
-                    i['value'] = 2;
-                }
+        var $this = $(this);
+        //check if we're trying to close the projects, because
+        //this will remove it from the list of visible projects
+        var $status = $('select[name=status]', $this);
+        if ($('option', $status).filter(":selected").text() == 'Closed') {
+            var do_close = "Close this ticket? \n\n" + 
+                        "It will disappear from your projects list.";
+            if (confirm(do_close) == false) {
+                //string matching to set the status back to Open
+                $('option', $status).filter(function() {
+                    return $(this).text() == 'Open';
+                }).prop('selected', true);
             }
-        });
+        }
+        var fdata = $this.serializeArray();
         $.ajax({
             url: "/update_details",
             method: "POST",

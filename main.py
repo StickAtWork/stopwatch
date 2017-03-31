@@ -56,6 +56,9 @@ def close_db(error):
 @app.context_processor
 def my_utility_processor():
     def get_statuses():
+        """Currently only needed within details.html,
+        returns all possible project statuses.
+        """
         db = get_db()
         cur = db.execute("""
             SELECT *
@@ -452,10 +455,20 @@ def time_action_item():
         
 @app.route('/add_phase', methods=['POST'])
 def add_phase():
+    """Creates a new phase for the current project.
+    
+    Checks to make sure there's an associated project; if not it returns
+    an error.
+    
+    Increments the new phase or sets it at 1 if there were no previous phases.
+    """
     db = get_db()
     user = get_online_user()
+    # no project associated? no need to create phase
     if user['viewing_project_id'] is None:
         return Response("Please select a project before adding a phase.", 500)
+    # gets most recent phase number so it can be incremented; 
+    # if no phase number found, sets to 1.
     last_phase = db.execute("""
         SELECT max(number)
         FROM phase
@@ -488,7 +501,7 @@ def update_details():
         data['tt_number'] = None
     user = get_online_user()
     data['project_id'] = user['viewing_project_id']
-    print data
+    # print data
     db = get_db()    
     db.execute("""
         UPDATE project
