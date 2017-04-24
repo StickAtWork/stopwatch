@@ -27,6 +27,7 @@ CREATE TABLE item_type (
 
 CREATE TABLE project (
     id INTEGER PRIMARY KEY, 
+    office_serial TEXT,
     tt_number INTEGER,
     user_id INTEGER,
     description TEXT,
@@ -141,8 +142,8 @@ INSERT INTO item_type (id, description)
     
 /* project + items for Luke user*/
 
-INSERT into project (id, tt_number, user_id, description, notes) 
-    VALUES (null, null, 1, "Example Project", "Test notes for the project");
+INSERT into project (id, tt_number, user_id, description, notes, status_id) 
+    VALUES (null, null, 1, "Example Project", "Test notes for the project", 2);
     
 INSERT into action_item (id, name, project_id, rate_id, type_id)
     VALUES (null, "Some Form", 1, 1, 1);    
@@ -155,16 +156,16 @@ INSERT into action_item (id, name, project_id, rate_id, type_id)
     
 /* 2nd project */
     
-INSERT into project (id, tt_number, user_id, description, notes) 
-    VALUES (null, null, 1, "Third Project", "Foo bar baz eggs spam");
+INSERT into project (id, tt_number, user_id, description, notes, status_id) 
+    VALUES (null, null, 1, "Third Project", "Foo bar baz eggs spam", 2);
     
 INSERT into action_item (id, name, project_id, rate_id, type_id)
     VALUES (null, "Elephant Hashes", 3, 1, 2); 
      
 /* project + items for Stick user */
     
-INSERT into project (id, tt_number, user_id, description, notes) 
-    VALUES (null, null, 2, "Stick Project", "If Luke can see this, run away");
+INSERT into project (id, tt_number, user_id, description, notes, status_id) 
+    VALUES (null, null, 2, "Stick Project", "If Luke can see this, run away", 2);
      
 INSERT into action_item (id, name, project_id, rate_id, type_id)
     VALUES (null, "Some Other Thing", 2, 2, 1);  

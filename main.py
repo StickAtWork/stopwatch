@@ -507,6 +507,7 @@ def update_details():
         UPDATE project
         SET
             tt_number = :tt_number,
+            office_serial = :office_serial,
             description = :description,
             notes = :notes,
             status_id = :status
@@ -564,6 +565,24 @@ def bill_phase():
         WHERE
             a.rate_id = item_rate.id
         """, [request.data]).fetchall()
+    #print request.data
+    # print billed_phase
+    office = db.execute("""
+            SELECT
+                office_serial AS serial,
+                tt_number
+            FROM
+                project
+            WHERE
+                project.id = (
+                    SELECT 
+                        project_id
+                    FROM
+                        phase
+                    WHERE
+                        phase.id = ?
+                )
+        """, [request.data]).fetchone()
     # maybe i turn this into a query, someday.
     # someday...
     grand_totals = {
@@ -571,6 +590,7 @@ def bill_phase():
         'money': sum(y['money_total'] for y in billed_phase)
     }
     return render_template("billed_phase.html",
+                            office=office,
                             billed_phase=billed_phase,
                             grand_totals=grand_totals)
     

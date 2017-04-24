@@ -1,32 +1,11 @@
-<style>
-div#yourbill {
-    background-color: rgb(255, 255, 255); 
-    color: rgb(0, 0, 0);
-}
-
-#yourbill table tr:nth-child(odd) {
-    background-color: rgb(255, 255, 255);
-}
-
-#yourbill table tr:nth-child(even) {
-    background-color: rgb(200, 220, 220);
-}
-
-#yourbill table tr:first-of-type, #yourbill table tfoot {
-    background-color: rgb(200, 200, 220);
-}
-
-#yourbill table {
-    width: 100%;
-    font: Courier;
-}
-
-#yourbill table td:nth-child(n+3) {
-    text-align: right;
-}
-</style>
 <div id="yourbill">
-<h1>Your Bill</h1>
+<h1>Invoice</h1>
+{% if office.serial %}
+    <p>Serial: {{ office.serial }} </p> 
+{% endif %}
+{% if office.tt_number %}
+    <p>Ticket Number: {{ office.tt_number }} </p> 
+{% endif %}
 <table>
     <tr>
         <th>Date</th>
