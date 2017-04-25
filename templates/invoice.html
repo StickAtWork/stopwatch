@@ -1,4 +1,35 @@
-<div id="yourbill">
+<style>
+div#invoice {
+    background-color: rgb(255, 255, 255); 
+    color: rgb(0, 0, 0);
+}
+
+#invoice p {
+    color: rgb(0, 0, 0);
+}
+
+#invoice table tr:nth-child(odd) {
+    background-color: rgb(255, 255, 255);
+}
+
+#invoice table tr:nth-child(even) {
+    background-color: rgb(200, 220, 220);
+}
+
+#invoice table tr:first-of-type, #invoice table tfoot {
+    background-color: rgb(200, 200, 220);
+}
+
+#invoice table {
+    width: 100%;
+    font: Courier;
+}
+
+#invoice table td:nth-child(n+3) {
+    text-align: right;
+}
+</style>
+<div id="invoice">
 <h1>Invoice</h1>
 {% if office.serial %}
     <p>Serial: {{ office.serial }} </p> 
@@ -13,7 +44,7 @@
         <th>Time (Minutes)</th>
         <th>Sub-total</th>
     </tr>
-{% for record in billed_phase %}
+{% for record in invoice %}
     <tr>
         <td>{{ record.date }}</td>
         <td>{{ record.name }}</td>

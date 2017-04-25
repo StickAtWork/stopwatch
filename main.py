@@ -204,7 +204,7 @@ def get_bill_for_phase(phase_id):
     """
     
     db = get_db()
-    billed_phase = db.execute("""
+    invoice = db.execute("""
         SELECT
             a.name,
             a.phase_id,
@@ -233,7 +233,7 @@ def get_bill_for_phase(phase_id):
             a.rate_id = item_rate.id
         """, [phase_id]).fetchall()
     #print request.data
-    # print billed_phase
+    # print invoice
     office = db.execute("""
             SELECT
                 office_serial AS serial,
@@ -253,12 +253,12 @@ def get_bill_for_phase(phase_id):
     # maybe i turn this into a query, someday.
     # someday...
     grand_totals = {
-        'time': sum(x['time_total'] for x in billed_phase),
-        'money': sum(y['money_total'] for y in billed_phase)
+        'time': sum(x['time_total'] for x in invoice),
+        'money': sum(y['money_total'] for y in invoice)
     }
-    return render_template("billed_phase.html",
+    return render_template("invoice.html",
                             office=office,
-                            billed_phase=billed_phase,
+                            invoice=invoice,
                             grand_totals=grand_totals)
     
 def start_timing(item_id, phase_id):
