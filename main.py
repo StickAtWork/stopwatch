@@ -5,6 +5,8 @@ from uuid import uuid4
 from flask import Flask, request, session, g, \
     redirect, url_for, abort, render_template, \
     flash, Response
+    
+from mailer import email_invoice
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -183,6 +185,81 @@ def get_time_records_for_phases(phases):
         """.format(','.join(str(p['id']) for p in phases)))
     
     return cur.fetchall()
+    
+def get_bill_for_phase(phase_id): 
+    """Returns an HTML table with an itemized series of timed sessions. 
+    
+    Should include per line item: 
+        name
+        date
+        total minutes spent
+        sub-total (minutes spent * fee per hour)
+        
+    Also should include a grand total for minutes spent and total fee.
+    
+    As of this writing this is not a standalone estimate for any goods or
+    services rendered and still needs to go to accounting as it does not
+    include any of their fees or taxes or anything ancillary to the actual
+    timed action item.
+    """
+    
+    db = get_db()
+    billed_phase = db.execute("""
+        SELECT
+            a.name,
+            a.phase_id,
+            a.date,
+            a.time_total,
+            (item_rate.fee_per_hour / 60.0 )* a.time_total AS money_total
+        FROM
+            item_rate, 
+            (SELECT
+                action_item.name,
+                action_item.rate_id,
+                time_record.phase_id,
+                strftime('%Y-%m-%d', time_record.start) AS date,
+                sum(strftime('%s', stop) - strftime('%s', start))/ 60.0 
+                    AS time_total
+            FROM
+                action_item,
+                time_record
+            WHERE
+                action_item.id = time_record.action_item_id
+                AND time_record.phase_id = ?
+            GROUP BY
+                action_item.id
+            ) AS a
+        WHERE
+            a.rate_id = item_rate.id
+        """, [phase_id]).fetchall()
+    #print request.data
+    # print billed_phase
+    office = db.execute("""
+            SELECT
+                office_serial AS serial,
+                tt_number
+            FROM
+                project
+            WHERE
+                project.id = (
+                    SELECT 
+                        project_id
+                    FROM
+                        phase
+                    WHERE
+                        phase.id = ?
+                )
+        """, [phase_id]).fetchone()
+    # maybe i turn this into a query, someday.
+    # someday...
+    grand_totals = {
+        'time': sum(x['time_total'] for x in billed_phase),
+        'money': sum(y['money_total'] for y in billed_phase)
+    }
+    return render_template("billed_phase.html",
+                            office=office,
+                            billed_phase=billed_phase,
+                            grand_totals=grand_totals)
     
 def start_timing(item_id, phase_id):
     db = get_db()
@@ -519,80 +596,19 @@ def update_details():
                             projects=projects,
                             active=user['viewing_project_id'])
                             
-@app.route('/bill_phase', methods=['POST'])
-def bill_phase():
-    """Returns an HTML table with an itemized series of timed sessions. 
+@app.route('/preview_invoice', methods=['POST'])
+def preview_invoice():
+    #inv = get_bill_for_phase(request.data)
+    #email_invoice(inv)
+    #return inv
+    return get_bill_for_phase(request.data)
+
+
+@app.route('/send_invoice', methods=['POST'])    
+def send_invoice():
+    email_invoice(get_bill_for_phase(request.data))
+    return 'Success'
     
-    Should include per line item: 
-        name
-        date
-        total minutes spent
-        sub-total (minutes spent * fee per hour)
-        
-    Also should include a grand total for minutes spent and total fee.
-    
-    As of this writing this is not a standalone estimate for any goods or
-    services rendered and still needs to go to accounting as it does not
-    include any of their fees or taxes or anything ancillary to the actual
-    timed action item.
-    """
-    db = get_db()
-    billed_phase = db.execute("""
-        SELECT
-            a.name,
-            a.phase_id,
-            a.date,
-            a.time_total,
-            (item_rate.fee_per_hour / 60.0 )* a.time_total AS money_total
-        FROM
-            item_rate, 
-            (SELECT
-                action_item.name,
-                action_item.rate_id,
-                time_record.phase_id,
-                strftime('%Y-%m-%d', time_record.start) AS date,
-                sum(strftime('%s', stop) - strftime('%s', start))/ 60.0 
-                    AS time_total
-            FROM
-                action_item,
-                time_record
-            WHERE
-                action_item.id = time_record.action_item_id
-                AND time_record.phase_id = ?
-            GROUP BY
-                action_item.id
-            ) AS a
-        WHERE
-            a.rate_id = item_rate.id
-        """, [request.data]).fetchall()
-    #print request.data
-    # print billed_phase
-    office = db.execute("""
-            SELECT
-                office_serial AS serial,
-                tt_number
-            FROM
-                project
-            WHERE
-                project.id = (
-                    SELECT 
-                        project_id
-                    FROM
-                        phase
-                    WHERE
-                        phase.id = ?
-                )
-        """, [request.data]).fetchone()
-    # maybe i turn this into a query, someday.
-    # someday...
-    grand_totals = {
-        'time': sum(x['time_total'] for x in billed_phase),
-        'money': sum(y['money_total'] for y in billed_phase)
-    }
-    return render_template("billed_phase.html",
-                            office=office,
-                            billed_phase=billed_phase,
-                            grand_totals=grand_totals)
     
 if __name__ == '__main__':
     with app.app_context():

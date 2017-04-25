@@ -5,9 +5,15 @@
         {% if phase.phase_total %}
             <button name="phase_id" 
                     value="{{ phase.id }}" 
-                    formaction="{{ url_for('bill_phase') }}" 
+                    formaction="{{ url_for('preview_invoice') }}" 
                     formmethod="post">
-                    Bill
+                    Preview
+            </button>
+            <button name="phase_id" 
+                    value="{{ phase.id }}" 
+                    formaction="{{ url_for('send_invoice') }}" 
+                    formmethod="post">
+                    Send
             </button>
             <table>
                 <tr>
