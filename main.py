@@ -607,7 +607,11 @@ def preview_invoice():
 @app.route('/send_invoice', methods=['POST'])    
 def send_invoice():
     email_invoice(get_bill_for_phase(request.data))
-    return 'Success'
+    return """
+            <div style="background-color:rgb(140, 140, 140)">
+                <h1>Sent invoice</h1>
+            </div>
+            """
     
     
 if __name__ == '__main__':
