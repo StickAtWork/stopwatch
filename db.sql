@@ -112,7 +112,10 @@ INSERT into user (id, name, password, usergroup_id)
     VALUES (null, "Stick", "admin", 2);
     
 INSERT INTO user (id, name, password, usergroup_id)
-    VALUES (null, "Marilyn", "123456789", 3);
+    VALUES (null, "Mark", "comeoriginal", 1);
+    
+INSERT INTO user (id, name, password, usergroup_id)
+    VALUES (null, "Roger", "roostermold", 1);
     
 
 /* test statuses */

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block scripts %}
+    <script src="/static/scripts/admin.js" type="text/javascript"></script>
+{% endblock %}
+
+{% block main %}
+<div id="admin_editor">
+<h3>Edit Types</h3>
+    <div id="admin-types">
+    {% include 'type_editor.html' %}
+    </div>
+<h3>Edit Rates</h3>
+    <div id="admin-rates">
+    {% include 'rate_editor.html' %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+<form id="type_editor">
+<input type="text" name="type-id" style="display: none" value="-1">
+Description: <input type="text" name="description">
+<input type="Submit"
+        value="Save"
+        formaction="{{ url_for('edit_type') }}">
+</form>
+<table id="type_table">
+    <tr>
+        <th>Description</th>
+    </tr>
+    {% for t in types -%}
+    <tr data-id="{{ t.id }}">
+        <td>{{ t.description }}</td>
+    </tr>
+    {%- endfor %}
+</table>

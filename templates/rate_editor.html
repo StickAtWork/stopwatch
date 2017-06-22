@@ -1,0 +1,21 @@
+<form id="rate_editor">
+    <input type="text" name="rate-id" style="display: none" value="-1">
+    Description: <input type="text" name="description">
+    Fee Per Hour: <input type="text" name="fee_per_hour">
+    <input type="Submit"
+            value="Save"
+            formaction="{{ url_for('edit_rate') }}">
+    
+</form>
+<table id="rate_table">
+    <tr>
+        <th>Description</th>
+        <th>Fee Per Hour</th>
+    </tr>
+    {% for r in rates -%}
+        <tr data-id="{{ r.id }}">
+            <td>{{ r.description }}</td>
+            <td>{{ "%0.2f" | format(r.fee_per_hour) }}</td>
+        </tr>
+    {%- endfor %}
+</table>

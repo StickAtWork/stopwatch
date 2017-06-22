@@ -612,7 +612,64 @@ def send_invoice():
                 <h1>Sent invoice</h1>
             </div>
             """
+
+@app.route('/admin', methods=['GET'])
+def admin():
+    db = get_db()
+    rates = db.execute("SELECT * FROM item_rate").fetchall()
+    types = db.execute("SELECT * FROM item_type").fetchall()
+    return render_template('admin.html', types=types, rates=rates)
     
+@app.route('/edit_rate', methods=['POST'])
+def edit_rate():
+    data = {k: v for k, v in request.form.iteritems()}
+    data['id'] = data.pop('rate-id')
+    print data
+    if data['id'] is not -1:
+        db = get_db()
+        db.execute("""
+            UPDATE 
+                item_rate
+            SET 
+                description = :description,
+                fee_per_hour = :fee_per_hour
+            WHERE 
+                id = :id
+        
+        """, data)
+        db.commit()
+    
+    rates = db.execute("SELECT * FROM item_rate").fetchall()
+    return render_template('rate_editor.html', rates=rates)
+    
+@app.route('/edit_type', methods=['POST'])
+def edit_type():
+    print request.form
+    db = get_db()
+    data = {k: v for k, v in request.form.iteritems()}
+    data['id'] = data.pop('type-id')
+    print data
+    if data['id'] == '-1':
+        db.execute("""
+            INSERT INTO
+                item_type (id, description)
+            VALUES (null, 'Give Us A Title')
+        """)
+        #db.commit()
+    else:
+        db.execute("""
+            UPDATE 
+                item_type
+            SET 
+                description = :description
+            WHERE 
+                id = :id
+        
+        """, data)
+        #db.commit()
+    db.commit()
+    types = db.execute("SELECT * FROM item_type").fetchall()
+    return render_template('type_editor.html', types=types)
     
 if __name__ == '__main__':
     with app.app_context():
