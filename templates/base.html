@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
 <head>
+    <title>{%- block title -%}Stopwatch{%- endblock -%}</title>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script src="/static/scripts/errorhandle.js" type="text/javascript"></script>
     <script src="/static/scripts/popup.js" type="text/javascript"></script>
@@ -32,7 +33,11 @@
             <a href='/login'>Login</a>
         {% endif %}
     </header>
-    <section id="left">{% include 'navi.html' %}</section>
+    <section id="left">
+    {% if request.path != url_for('login') %}
+        {% include 'navi.html'%}
+    {% endif %}
+    </section>
     <section id="main">{% block main %}{% endblock %}</section>
 </body>
 </html>

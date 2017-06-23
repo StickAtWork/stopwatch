@@ -41,10 +41,21 @@ $(document).ready(function(){
             alert("Please select a timeable item.");
         } else {
             if(fdata[0]["value"] == 'Horse') {
+                /* 
+                    why did i even write this 
+                    i don't remember what this does
+                */
                 alert("Got 'Horse' instead of 'int', assumed test");
             }
         }
         return false;
+    });
+    
+    $('.navi li a').on('click', function(e){
+        if ($("#currently-timing").length) {
+            alert("Don't switch views while timing.");
+            return false;
+        }
     });
     
     

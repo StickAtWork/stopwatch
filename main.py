@@ -320,7 +320,8 @@ def check_user():
     if do_login and request.endpoint not in ('login', 'logout', 'static'):
         return redirect(url_for('login'), code=401)
     # confirm privilege to access url provided
-    if get_online_user():
+    user = get_online_user()
+    if user:
         # just a test until privs are needed
         print is_good_request()
 
@@ -644,7 +645,7 @@ def edit_rate():
     
 @app.route('/edit_type', methods=['POST'])
 def edit_type():
-    print request.form
+    # print request.form
     db = get_db()
     data = {k: v for k, v in request.form.iteritems()}
     data['id'] = data.pop('type-id')
@@ -653,8 +654,8 @@ def edit_type():
         db.execute("""
             INSERT INTO
                 item_type (id, description)
-            VALUES (null, 'Give Us A Title')
-        """)
+            VALUES (null, ?)
+        """, [data['description'] or 'Default Title'])
         #db.commit()
     else:
         db.execute("""
