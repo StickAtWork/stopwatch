@@ -16,10 +16,16 @@ $(document).ready(function(){
             data: project_id
         }).success(function(data){
             $('#expanded-project').empty().append(data);
+            //the template can set which project is active
+            //but this needs to be here because it isn't the section
+            //that is being reloaded, only the expanded_project.html
+            //is being resent by the server. the template logic only applies
+            //to the FIRST load on the initial visit to the page
             $this.siblings().removeClass("selected");
             $this.addClass("selected");
         });
     });
+    
     
     $proj_view.on('click', 'button', function(){
         $.ajax({
@@ -33,7 +39,6 @@ $(document).ready(function(){
     /*  timer handler
     
     */
-    
     $('#main form#timer').on('submit', function(){
         var fdata = $(this).serializeArray();
         var do_submit = fdata[0]["value"] !== undefined;
@@ -41,15 +46,14 @@ $(document).ready(function(){
             alert("Please select a timeable item.");
         } else {
             if(fdata[0]["value"] == 'Horse') {
-                /* 
-                    why did i even write this 
-                    i don't remember what this does
-                */
+                //why did i even write this 
+                //i don't remember what this does
                 alert("Got 'Horse' instead of 'int', assumed test");
             }
         }
         return false;
     });
+    
     
     $('.navi li a').on('click', function(e){
         if ($("#currently-timing").length) {
@@ -67,11 +71,12 @@ $(document).ready(function(){
     */
     var $exp_proj = $("#expanded-project");
     
-    $exp_proj.on('click', "button.shutter", function(){
+    $exp_proj.on('click', ".shutter", function(e){
         var $this = $(this);
         $this.siblings().toggle();
         $this.toggleClass('closed');
     });
+    
     
     $exp_proj.on('click', '#action_items div.content tr', function(){
         var $this = $(this);
@@ -122,6 +127,7 @@ $(document).ready(function(){
         });
     });
     
+    
     $exp_proj.on('click', "#new_action_item input[value=Save]", function(event) {
         var $this = $(this);
         var fdata = $this.parent().serializeArray();
@@ -135,8 +141,11 @@ $(document).ready(function(){
         return false;
     });
     
-    //set default values for a new action item. most importantly setting the 
-    //data-id to -1 to signal the server that it's a new item.
+    
+    /*  set default values for a new action item. most importantly setting the 
+        data-id to -1 to signal the server that it's a new item.
+        
+    */
     $exp_proj.on('click', "#new_action_item input[value=New]", function(event) {
         $(this).siblings().each(function(index, el){
             //name, type, rate
@@ -154,6 +163,7 @@ $(document).ready(function(){
         });
         return false;
     });
+    
     
     $exp_proj.on('click', '.item-buttons form input', function(){
         var $this = $(this);
@@ -217,6 +227,7 @@ $(document).ready(function(){
         });
         return false;
     });
+    
     
     $exp_proj.on('click', '.phase-view button', function(){
         var $this = $(this);

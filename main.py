@@ -164,6 +164,7 @@ def get_project_phases(project_id):
             WHERE phase_id = phase.id) AS phase_total
         FROM phase
         WHERE project_id = ?
+        ORDER BY number DESC;
         """, [project_id])
     
     return cur.fetchall()
@@ -304,6 +305,7 @@ def stop_timing():
         
 @app.before_request
 def check_user():
+    print request.full_path
     #print session
     do_login = True
     session_id = session.get('session_id')
@@ -386,8 +388,24 @@ def index():
 def my_projects():
     user = get_online_user()
     projects = get_projects_for_user(user)
+    db = get_db()
+    rates = db.execute("SELECT * FROM item_rate").fetchall()
+    types = db.execute("SELECT * FROM item_type").fetchall()
+    action_items = get_project_items(user['viewing_project_id'])
+    details = db.execute("""
+        SELECT * 
+        FROM project 
+        WHERE id = :project_id
+        """, [user['viewing_project_id']]).fetchone()
+    phases = get_project_phases(user['viewing_project_id'])
     return render_template('my_projects.html', 
-                            projects=projects)
+                            projects=projects,
+                            rates=rates,
+                            types=types,
+                            active=user['viewing_project_id'],
+                            action_items=action_items,
+                            details=details,
+                            phases=phases)
                             
 @app.route('/add_project', methods=['POST'])
 def add_project():

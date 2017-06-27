@@ -4,6 +4,6 @@
         {% if request.path != url_for(page) %} 
             href="{{ url_for(page) }}" 
         {% endif %}
-        >{{page}}</a></li>
+        >{{ page.replace('_', ' ').title() }}</a></li>
     {%- endfor %}
 </ul>

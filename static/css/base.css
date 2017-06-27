@@ -50,6 +50,7 @@ a {
     padding: 5px 10px;
     text-decoration: none;
     text-align: center;
+    -webkit-user-select: none;
     color: rgb(200, 200, 200);
     background-color: rgb(70, 70, 120);
     border: 2px groove rgb(70, 70, 120);
