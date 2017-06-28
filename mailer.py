@@ -5,7 +5,7 @@ from email.message import Message
 from email.MIMEBase import MIMEBase
 from email.mime.text import MIMEText
 
-def email_invoice(invoice):
+def email_invoice(invoice, user_email, cc_email=None):
     """Sends email with the invoice as attachment.
     
     The default for this will eventually be 
@@ -19,12 +19,20 @@ def email_invoice(invoice):
     """
     
     me = "invoice@stopwatch.com"
-    you = "luke@macpractice.com"
+    you = user_email
+    #cc = "emr@macpractice.com"
+    
+    #recips = [you, cc]
     
     msg = MIMEMultipart()
     msg['Subject'] = "Testing"
     msg['From'] = me
     msg['To'] = you
+    if cc_email is not None:
+        msg['Cc'] = cc_email
+        recips = [you, cc_email]
+    else:
+        recips = you
     
     text = Message()
     
@@ -42,5 +50,5 @@ def email_invoice(invoice):
     msg.attach(the_invoice)
     
     s = smtplib.SMTP('smtp.macpractice.com')
-    s.sendmail(me, you, msg.as_string())
+    s.sendmail(me, recips, msg.as_string())
     s.quit()

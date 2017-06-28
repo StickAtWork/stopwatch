@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block main %}
+<h2>Your Profile</h2>
+<table>
+    <tr>
+        <td>Name</td>
+        <td>{{user.name}}</td>
+    </tr>
+    <tr>
+        <td>Email</td>
+        <td>{{user.email}}</td>
+    </tr>
+</table>
+{% endblock %}

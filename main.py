@@ -625,7 +625,15 @@ def preview_invoice():
 
 @app.route('/send_invoice', methods=['POST'])    
 def send_invoice():
-    email_invoice(get_bill_for_phase(request.data))
+    invoice = get_bill_for_phase(request.data)
+    db = get_db()
+    user_email = db.execute("""
+            SELECT email
+            FROM user
+            WHERE id = ?
+        """, [get_online_user()['user_id']]).fetchone()[0]
+    print user_email
+    email_invoice(invoice, user_email)
     return """
             <div style="background-color:rgb(140, 140, 140)">
                 <h1>Sent invoice</h1>
@@ -689,6 +697,16 @@ def edit_type():
     db.commit()
     types = db.execute("SELECT * FROM item_type").fetchall()
     return render_template('type_editor.html', types=types)
+    
+@app.route('/profile')
+def profile():
+    db = get_db()
+    user = db.execute("""
+            SELECT *
+            FROM user
+            WHERE id = ?
+        """, [get_online_user()['user_id']]).fetchone()
+    return render_template('profile.html', user=user)
     
 if __name__ == '__main__':
     with app.app_context():

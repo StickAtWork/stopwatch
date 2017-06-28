@@ -51,7 +51,8 @@ CREATE TABLE user (
     id INTEGER PRIMARY KEY,
     name TEXT,
     password TEXT,
-    usergroup_id INTEGER
+    usergroup_id INTEGER,
+    email TEXT
 );
 
 CREATE TABLE usergroup (
@@ -105,17 +106,17 @@ INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
 
 /* to test features */
 
-INSERT into user (id, name, password, usergroup_id) 
-    VALUES (null, "Luke", "password", 1);
+INSERT into user (id, name, password, usergroup_id, email) 
+    VALUES (null, "Luke", "password", 1, "luke@macpractice.com");
     
-INSERT into user (id, name, password, usergroup_id)
-    VALUES (null, "Stick", "admin", 2);
+INSERT into user (id, name, password, usergroup_id, email)
+    VALUES (null, "Stick", "admin", 2, "luke@macpractice.com");
     
-INSERT INTO user (id, name, password, usergroup_id)
-    VALUES (null, "Mark", "comeoriginal", 1);
+INSERT INTO user (id, name, password, usergroup_id, email)
+    VALUES (null, "Mark", "comeoriginal", 1, "markhoefler@macpractice.com");
     
-INSERT INTO user (id, name, password, usergroup_id)
-    VALUES (null, "Roger", "roostermold", 1);
+INSERT INTO user (id, name, password, usergroup_id, email)
+    VALUES (null, "Roger", "roostermold", 1, "roger@macpratice.com");
     
 
 /* test statuses */
