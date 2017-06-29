@@ -11,7 +11,7 @@ $(document).ready(function(){
             return false;
         }
         $.ajax({
-            url: "expanded_project",
+            url: $('#expanded-project').attr('formaction'),
             method: "POST",
             data: project_id
         }).success(function(data){
@@ -204,7 +204,7 @@ $(document).ready(function(){
         }
         var fdata = $this.serializeArray();
         $.ajax({
-            url: "/update_details",
+            url: $this.attr('formaction'),
             method: "POST",
             data: fdata
         }).success(function(data){

@@ -6,9 +6,6 @@
 	<link rel="stylesheet" type="text/css" href="static/css/my_projects.css"/>
 {% endblock %}
 
-{#
-{% block left %}{% include 'navi.html' %}{% endblock %}
-#}
 {% block main %}
     <section id="project-view"/>
     {% include 'project_view.html' %}
@@ -18,7 +15,7 @@
     {% include 'timer_view.html' %}
     </section>
     #}
-    <section id="expanded-project">
+    <section id="expanded-project" formaction="{{ url_for('expanded_project') }}">
     {% include 'expanded_project.html' %}
     </section>
 {% endblock %}

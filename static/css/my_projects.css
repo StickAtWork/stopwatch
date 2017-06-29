@@ -22,6 +22,10 @@
     color: rgb(180, 180, 180);
 }
 
+#tabs .shutter:active {
+    color: rgb(50, 50, 50);
+}
+
 .shutter:before {
     content: "\25bc";
     font-size: 12px;
@@ -40,10 +44,6 @@
 
 .selected td.item-buttons, .selected td.item-buttons form {
     display: initial;
-}
-
-#tabs .shutter:active {
-    color: rgb(50, 50, 50);
 }
 
 #item_info {

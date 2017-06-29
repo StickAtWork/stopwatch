@@ -63,8 +63,10 @@ def my_utility_processor():
         """
         db = get_db()
         cur = db.execute("""
-            SELECT *
-            FROM project_status
+            SELECT 
+                *
+            FROM 
+                project_status
         """)
     
         return cur.fetchall()
@@ -79,9 +81,12 @@ def get_online_user():
     """Gets the user that matches the session id."""
     db = get_db()
     cur = db.execute("""
-        SELECT * 
-        FROM online_users 
-        WHERE session_id = ?
+        SELECT 
+            * 
+        FROM 
+            online_users 
+        WHERE 
+            session_id = ?
         """, [session.get('session_id')])
     return cur.fetchone()
     
@@ -91,15 +96,23 @@ def get_urls_for_user(user):
     """
     db = get_db()
     cur = db.execute("""
-        SELECT url
-        FROM permission
+        SELECT 
+            url
+        FROM 
+            permission
         WHERE id in (
-            SELECT permission_id
-            FROM usergroup_permission_tie
-            WHERE usergroup_id = (
-                SELECT usergroup_id
-                FROM user
-                WHERE id = ?
+            SELECT 
+                permission_id
+            FROM 
+                usergroup_permission_tie
+            WHERE 
+                usergroup_id = (
+                    SELECT 
+                        usergroup_id
+                    FROM 
+                        user
+                    WHERE 
+                        id = ?
             )
         )
         """, [user['user_id']])
@@ -125,7 +138,8 @@ def get_projects_for_user(user):
             (SELECT sum(strftime('%s', stop) - strftime('%s', start)) / 60.0 
             FROM time_record 
             WHERE project_id = project.id) AS project_total
-        FROM project 
+        FROM 
+            project 
         WHERE 
             user_id = ? AND 
             status_id != 1
@@ -162,9 +176,12 @@ def get_project_phases(project_id):
             (SELECT sum(strftime('%s', stop) - strftime('%s', start)) / 60.0 
             FROM time_record 
             WHERE phase_id = phase.id) AS phase_total
-        FROM phase
-        WHERE project_id = ?
-        ORDER BY number DESC;
+        FROM 
+            phase
+        WHERE 
+            project_id = ?
+        ORDER BY 
+            number DESC;
         """, [project_id])
     
     return cur.fetchall()
@@ -233,8 +250,6 @@ def get_bill_for_phase(phase_id):
         WHERE
             a.rate_id = item_rate.id
         """, [phase_id]).fetchall()
-    #print request.data
-    # print invoice
     office = db.execute("""
             SELECT
                 office_serial AS serial,
@@ -272,9 +287,12 @@ def start_timing(item_id, phase_id):
             (null, ?, ?, ?, datetime('now'), null)
         """, [item_id, user['viewing_project_id'], phase_id])
     db.execute("""
-        UPDATE online_users 
-        SET time_record_id = ?
-        WHERE user_id = ?
+        UPDATE 
+            online_users 
+        SET 
+            time_record_id = ?
+        WHERE 
+            user_id = ?
         """, [new_time.lastrowid, user['user_id']])
     db.commit()
     
@@ -285,13 +303,19 @@ def stop_timing():
     db = get_db()
     user = get_online_user()
     db.executescript("""
-        UPDATE time_record 
-        SET stop=datetime('now')
-        WHERE id = {time_record_id};
+        UPDATE 
+            ime_record 
+        SET 
+            stop = datetime('now')
+        WHERE 
+            id = {time_record_id};
         
-        UPDATE online_users 
-        SET time_record_id=null
-        WHERE user_id = {user_id}
+        UPDATE 
+            online_users 
+        SET 
+            time_record_id=null
+        WHERE 
+            user_id = {user_id}
         """.format(**user))
     db.commit()
     
@@ -306,15 +330,17 @@ def stop_timing():
 @app.before_request
 def check_user():
     print request.full_path
-    #print session
     do_login = True
     session_id = session.get('session_id')
     if session_id is not None:
         db = get_db()
         cur = db.execute("""
-            SELECT * 
-            FROM online_users
-            WHERE session_id = ?
+            SELECT 
+                * 
+            FROM 
+                online_users
+            WHERE 
+                session_id = ?
             """, [session_id])
         match = cur.fetchall()
         if match:
@@ -332,9 +358,12 @@ def login():
     if request.method == 'POST':
         db = get_db()
         result = db.execute("""
-            SELECT id, name, password
-            FROM user
-            WHERE name=?
+            SELECT 
+                id, name, password
+            FROM 
+                user
+            WHERE 
+                name = ?
         """, [request.form['name']]).fetchall()
         if not result:
             flash("No such username")
@@ -368,8 +397,10 @@ def logout():
             stop_timing()
         db = get_db()
         db.execute("""
-            DELETE FROM online_users 
-            WHERE user_id = ?
+            DELETE FROM 
+                online_users 
+            WHERE 
+                user_id = ?
             """, [user['user_id']])
         session.clear()
         db.commit()
@@ -393,9 +424,12 @@ def my_projects():
     types = db.execute("SELECT * FROM item_type").fetchall()
     action_items = get_project_items(user['viewing_project_id'])
     details = db.execute("""
-        SELECT * 
-        FROM project 
-        WHERE id = :project_id
+        SELECT 
+            * 
+        FROM 
+            project 
+        WHERE 
+            id = :project_id
         """, [user['viewing_project_id']]).fetchone()
     phases = get_project_phases(user['viewing_project_id'])
     return render_template('my_projects.html', 
@@ -407,7 +441,7 @@ def my_projects():
                             details=details,
                             phases=phases)
                             
-@app.route('/add_project', methods=['POST'])
+@app.route('/my_projects/add_project', methods=['POST'])
 def add_project():
     db = get_db()
     user = get_online_user()
@@ -424,7 +458,7 @@ def add_project():
     return render_template('project_view.html', 
                             projects=projects)
     
-@app.route('/expanded_project', methods=['POST'])
+@app.route('/my_projects/expanded_project', methods=['POST'])
 def expanded_project():
     user = get_online_user()
     if user['time_record_id'] is not None:
@@ -436,14 +470,20 @@ def expanded_project():
         "session_id": user['session_id']
     }
     details = db.execute("""
-        SELECT * 
-        FROM project 
-        WHERE id = :project_id
+        SELECT 
+            * 
+        FROM 
+            project 
+        WHERE 
+            id = :project_id
         """, data).fetchone()
     db.execute("""
-        UPDATE online_users
-        SET viewing_project_id = :project_id
-        WHERE session_id = :session_id
+        UPDATE 
+            online_users
+        SET 
+            viewing_project_id = :project_id
+        WHERE 
+            session_id = :session_id
         """, data)
     db.commit()
     action_items = get_project_items(data['project_id'])
@@ -460,7 +500,7 @@ def expanded_project():
                             phases=phases,
                             time_records=time_records)
     
-@app.route('/add_action_item', methods=['POST'])
+@app.route('/my_projects/add_action_item', methods=['POST'])
 def add_action_item():
     data = {k: v for k, v in request.form.iteritems()}
     if not data['name']:
@@ -476,37 +516,45 @@ def add_action_item():
     data['project_id'] = u'{}'.format(project_id)
     # use -1 as a signal that the new item has no id. the app will manually set
     # new projects to -1 from the item editor
-    if int(data['id']) == -1:
+    if data['id'] == '-1':
         db.execute("""
-            INSERT INTO action_item (id, name, project_id, rate_id, type_id)
-            VALUES (null, :name, :project_id, :rate, :type)
+            INSERT INTO 
+                action_item (id, name, project_id, rate_id, type_id)
+            VALUES 
+                (null, :name, :project_id, :rate, :type)
             """, data)
     else:
         db.execute("""
-            UPDATE action_item
-            SET name=:name,
+            UPDATE 
+                action_item
+            SET 
+                name=:name,
                 project_id=:project_id,
                 rate_id=:rate,
                 type_id=:type
-            WHERE id=:id
+            WHERE 
+                id=:id
             """, data)
     db.commit()
     action_items = get_project_items(project_id)
-    return render_template("action_items.html", action_items=action_items)
+    return render_template("action_items.html", 
+                            action_items=action_items)
 
-@app.route('/delete_action_item', methods=['POST'])
+@app.route('/my_projects/delete_action_item', methods=['POST'])
 def delete_action_item():
     db = get_db()
     db.execute("""
-        DELETE FROM action_item
-        WHERE id = :item_id 
+        DELETE FROM 
+            action_item
+        WHERE 
+            id = :item_id 
         """, request.form)
     db.commit()
     action_items = get_project_items(get_online_user()['viewing_project_id'])
     return render_template("action_items.html", 
                             action_items=action_items)
     
-@app.route('/time_action_item', methods=['POST'])
+@app.route('/my_projects/time_action_item', methods=['POST'])
 def time_action_item():
     """Start/stop toggle for timing.
     
@@ -526,14 +574,19 @@ def time_action_item():
                                 action_items=action_items)
     else:
         latest_phase = db.execute("""
-                SELECT MAX(id)
-                FROM phase
-                WHERE project_id = ?
+                SELECT 
+                    max(id)
+                FROM 
+                    phase
+                WHERE 
+                    project_id = ?
                 """, [project_id]).fetchone()[0]
         if latest_phase is None:
             latest_phase = db.execute("""
-                INSERT INTO phase (id, project_id, number)
-                VALUES (null, ?, 1)
+                INSERT INTO 
+                    phase (id, project_id, number)
+                VALUES 
+                    (null, ?, 1)
                 """, [project_id]).lastrowid
             db.commit()
         start_timing(item_to_time, latest_phase)
@@ -543,13 +596,16 @@ def time_action_item():
             SELECT 
                 name, 
                 id 
-            FROM action_item
-            WHERE id = ?
+            FROM 
+                action_item
+            WHERE 
+                id = ?
             """, [item_to_time]).fetchone()
         
-        return render_template("currently_timing.html", item=timed_item)
+        return render_template("currently_timing.html", 
+                                item=timed_item)
         
-@app.route('/add_phase', methods=['POST'])
+@app.route('/my_projects/add_phase', methods=['POST'])
 def add_phase():
     """Creates a new phase for the current project.
     
@@ -566,17 +622,22 @@ def add_phase():
     # gets most recent phase number so it can be incremented; 
     # if no phase number found, sets to 1.
     last_phase = db.execute("""
-        SELECT max(number)
-        FROM phase
-        WHERE phase.project_id = ?
+        SELECT 
+            max(number)
+        FROM 
+            phase
+        WHERE 
+            phase.project_id = ?
         """, [user['viewing_project_id']]).fetchone()[0]
     if last_phase is not None:
         next_phase = last_phase + 1
     else:
         next_phase = 1
     db.execute("""
-        INSERT INTO phase (id, project_id, number)
-        VALUES (null, ?, ?)
+        INSERT INTO 
+            phase (id, project_id, number)
+        VALUES 
+            (null, ?, ?)
         """, [user['viewing_project_id'], next_phase])
     db.commit()
     
@@ -587,7 +648,7 @@ def add_phase():
                             phases=phases,
                             time_records=time_records)
                             
-@app.route('/update_details', methods=['POST'])
+@app.route('/my_projects/update_details', methods=['POST'])
 def update_details():
     data = {k: v for k, v in request.form.iteritems()}
     # set tt_num to None if not int
@@ -597,17 +658,18 @@ def update_details():
         data['tt_number'] = None
     user = get_online_user()
     data['project_id'] = user['viewing_project_id']
-    # print data
     db = get_db()    
     db.execute("""
-        UPDATE project
+        UPDATE 
+            project
         SET
             tt_number = :tt_number,
             office_serial = :office_serial,
             description = :description,
             notes = :notes,
             status_id = :status
-        WHERE id = :project_id
+        WHERE 
+            id = :project_id
         """, data)
     db.commit()
     projects = get_projects_for_user(user)
@@ -615,22 +677,22 @@ def update_details():
                             projects=projects,
                             active=user['viewing_project_id'])
                             
-@app.route('/preview_invoice', methods=['POST'])
+@app.route('/my_projects/preview_invoice', methods=['POST'])
 def preview_invoice():
-    #inv = get_bill_for_phase(request.data)
-    #email_invoice(inv)
-    #return inv
     return get_bill_for_phase(request.data)
 
 
-@app.route('/send_invoice', methods=['POST'])    
+@app.route('/my_projects/send_invoice', methods=['POST'])    
 def send_invoice():
     invoice = get_bill_for_phase(request.data)
     db = get_db()
     user_email = db.execute("""
-            SELECT email
-            FROM user
-            WHERE id = ?
+            SELECT 
+                email
+            FROM 
+                user
+            WHERE 
+                id = ?
         """, [get_online_user()['user_id']]).fetchone()[0]
     print user_email
     email_invoice(invoice, user_email)
@@ -640,20 +702,37 @@ def send_invoice():
             </div>
             """
 
+#
+#   Admin page
+#
+
+
 @app.route('/admin', methods=['GET'])
 def admin():
     db = get_db()
     rates = db.execute("SELECT * FROM item_rate").fetchall()
     types = db.execute("SELECT * FROM item_type").fetchall()
-    return render_template('admin.html', types=types, rates=rates)
+    return render_template('admin.html', 
+                            types=types, 
+                            rates=rates)
     
-@app.route('/edit_rate', methods=['POST'])
+@app.route('/admin/edit_rate', methods=['POST'])
 def edit_rate():
     data = {k: v for k, v in request.form.iteritems()}
+    # setting values so the query works properly - 'rate-id' needs
+    # to be renamed and maybe some default values should be set
+    data['description'] = data.pop('description') or 'Default Title'
+    data['fee_per_hour'] = data.pop('fee_per_hour') or '0'
     data['id'] = data.pop('rate-id')
-    print data
-    if data['id'] is not -1:
-        db = get_db()
+    db = get_db()
+    if data['id'] == '-1':
+        db.execute("""
+            INSERT INTO
+                item_rate (id, description, fee_per_hour)
+            VALUES 
+                (null, :description, :fee_per_hour)
+        """, data)
+    else:
         db.execute("""
             UPDATE 
                 item_rate
@@ -664,25 +743,26 @@ def edit_rate():
                 id = :id
         
         """, data)
-        db.commit()
-    
+        
+    db.commit()
     rates = db.execute("SELECT * FROM item_rate").fetchall()
-    return render_template('rate_editor.html', rates=rates)
+    return render_template('rate_editor.html', 
+                            rates=rates)
     
-@app.route('/edit_type', methods=['POST'])
+@app.route('/admin/edit_type', methods=['POST'])
 def edit_type():
-    # print request.form
     db = get_db()
     data = {k: v for k, v in request.form.iteritems()}
     data['id'] = data.pop('type-id')
+    data['description'] = data.pop('description') or 'Default Title'
     print data
     if data['id'] == '-1':
         db.execute("""
             INSERT INTO
                 item_type (id, description)
-            VALUES (null, ?)
-        """, [data['description'] or 'Default Title'])
-        #db.commit()
+            VALUES 
+                (null, :description)
+        """, data)
     else:
         db.execute("""
             UPDATE 
@@ -693,20 +773,29 @@ def edit_type():
                 id = :id
         
         """, data)
-        #db.commit()
     db.commit()
     types = db.execute("SELECT * FROM item_type").fetchall()
-    return render_template('type_editor.html', types=types)
+    return render_template('type_editor.html', 
+                            types=types)
+    
+
+#
+#   Profile page
+#
     
 @app.route('/profile')
 def profile():
     db = get_db()
     user = db.execute("""
-            SELECT *
-            FROM user
-            WHERE id = ?
-        """, [get_online_user()['user_id']]).fetchone()
-    return render_template('profile.html', user=user)
+            SELECT 
+                *
+            FROM 
+                user
+            WHERE 
+                id = :user_id
+        """, dict(get_online_user())).fetchone()
+    return render_template('profile.html', 
+                            user=user)
     
 if __name__ == '__main__':
     with app.app_context():

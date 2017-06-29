@@ -13,9 +13,18 @@
         <td>${{ "%0.2f" | format(item.fee_per_hour) }}</td>
         <td class="item-buttons">
             <form method="post">
-            <input type="text" name="item_id" style="display: none;" value="{{ item.id }}" />
-            <input type="submit" value="Time" formaction="{{ url_for('time_action_item') }}" />
-            <input type="submit" value="Delete" formaction="/delete_action_item" />
+            <input type="text" 
+                   name="item_id" 
+                   style="display: none;" 
+                   value="{{ item.id }}" />
+                   
+            <input type="submit" 
+                   value="Time" 
+                   formaction="{{ url_for('time_action_item') }}" />
+                   
+            <input type="submit" 
+                   value="Delete" 
+                   formaction="{{ url_for('delete_action_item') }}" />
             </form>
         </td>
     </tr>
