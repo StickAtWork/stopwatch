@@ -304,7 +304,7 @@ def stop_timing():
     user = get_online_user()
     db.executescript("""
         UPDATE 
-            ime_record 
+            time_record 
         SET 
             stop = datetime('now')
         WHERE 
