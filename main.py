@@ -100,21 +100,22 @@ def get_urls_for_user(user):
             url
         FROM 
             permission
-        WHERE id in (
-            SELECT 
-                permission_id
-            FROM 
-                usergroup_permission_tie
-            WHERE 
-                usergroup_id = (
-                    SELECT 
-                        usergroup_id
-                    FROM 
-                        user
-                    WHERE 
-                        id = ?
+        WHERE 
+            id in (
+                SELECT 
+                    permission_id
+                FROM 
+                    usergroup_permission_tie
+                WHERE 
+                    usergroup_id = (
+                        SELECT 
+                            usergroup_id
+                        FROM 
+                            user
+                        WHERE 
+                            id = ?
+                    )
             )
-        )
         """, [user['user_id']])
     return cur.fetchall()
     
@@ -350,8 +351,13 @@ def check_user():
     # confirm privilege to access url provided
     user = get_online_user()
     if user:
+        if 'navi' not in session:
+            session['navi'] = [url[0][1:] for url in get_urls_for_user(user)]
         # just a test until privs are needed
-        print is_good_request()
+        # print is_good_request()
+        print session['navi']
+        for url in session['navi']:
+            print url in request.full_path
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -402,9 +408,10 @@ def logout():
             WHERE 
                 user_id = ?
             """, [user['user_id']])
-        session.clear()
-        db.commit()
-        flash("You logged out")
+    session.clear()
+    db.commit()
+    print "{} after logout".format(session)
+    flash("You logged out")
     return redirect(url_for('login'), code=302)
     
 #   #

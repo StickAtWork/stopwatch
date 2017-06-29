@@ -1,5 +1,5 @@
 <ul class="navi">
-    {% for page in ['my_projects', 'profile', 'admin'] -%}
+    {% for page in session['navi'] -%}
         <li><a 
         {% if request.path != url_for(page) %} 
             href="{{ url_for(page) }}" 

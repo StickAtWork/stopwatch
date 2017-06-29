@@ -62,7 +62,6 @@ CREATE TABLE usergroup (
 
 CREATE TABLE permission (
     id INTEGER PRIMARY KEY,
-    name TEXT,
     url TEXT
 );
 
@@ -90,11 +89,14 @@ INSERT into usergroup (id, name)
 INSERT into usergroup (id, name)
     VALUES (null, 'Accounting');
     
-INSERT into permission (id, name, url)
-    VALUES (null, 'My Projects', '/my_projects');
+INSERT into permission (id, url)
+    VALUES (null, '/my_projects');
     
-INSERT into permission (id, name, url)
-    VALUES (null, 'Add Project', '/add_project');
+INSERT into permission (id, url)
+    VALUES (null, '/admin');
+    
+INSERT into permission (id, url)
+    VALUES (null, '/profile');
     
 /* ehr ties will be limited for test purposes */
 
@@ -103,6 +105,9 @@ INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
 
 INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
     VALUES (null, 1, 2);
+
+INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
+    VALUES (null, 1, 3);
 
 /* to test features */
 
