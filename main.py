@@ -63,10 +63,8 @@ def my_utility_processor():
         """
         db = get_db()
         cur = db.execute("""
-            SELECT 
-                *
-            FROM 
-                project_status
+            SELECT  *
+            FROM    project_status
         """)
     
         return cur.fetchall()
@@ -81,12 +79,9 @@ def get_online_user():
     """Gets the user that matches the session id."""
     db = get_db()
     cur = db.execute("""
-        SELECT 
-            * 
-        FROM 
-            online_users 
-        WHERE 
-            session_id = ?
+        SELECT  * 
+        FROM    online_users 
+        WHERE   session_id = ?
         """, [session.get('session_id')])
     return cur.fetchone()
     
@@ -96,93 +91,63 @@ def get_urls_for_user(user):
     """
     db = get_db()
     cur = db.execute("""
-        SELECT 
-            url
-        FROM 
-            permission
-        WHERE 
-            id in (
-                SELECT 
-                    permission_id
-                FROM 
-                    usergroup_permission_tie
-                WHERE 
-                    usergroup_id = (
-                        SELECT 
-                            usergroup_id
-                        FROM 
-                            user
-                        WHERE 
-                            id = ?
+        SELECT  url
+        FROM    permission
+        WHERE   id in (
+                SELECT  permission_id
+                FROM    usergroup_permission_tie
+                WHERE   usergroup_id = (
+                        SELECT  usergroup_id
+                        FROM    user
+                        WHERE   id = ?
                     )
             )
         """, [user['user_id']])
     return cur.fetchall()
     
-def is_good_request():
-    """Checks the request.endpoint against user's 
-    permissed urls. Returns True/False.
-    """
-    allowed_urls = get_urls_for_user(get_online_user())
-    for url in allowed_urls:
-        real_url = url[0][1:]
-        if request.endpoint == real_url:
-            return True
-    return False
-    
 def get_projects_for_user(user):
     db = get_db()
     cur = db.execute("""
-        SELECT
-            description,
-            id,
-            (SELECT sum(strftime('%s', stop) - strftime('%s', start)) / 60.0 
-            FROM time_record 
-            WHERE project_id = project.id) AS project_total
-        FROM 
-            project 
-        WHERE 
-            user_id = ? AND 
-            status_id != 1
+        SELECT  description,
+                id,
+                (SELECT sum(strftime('%s', stop) - strftime('%s', start)) / 60.0 
+                FROM    time_record 
+                WHERE   project_id = project.id) AS project_total
+        FROM    project 
+        WHERE   user_id = ? 
+                AND status_id != 1
         """, [user['user_id']])
     return cur.fetchall()
     
 def get_project_items(project_id):
     db = get_db()
     cur = db.execute("""
-        SELECT 
-            action_item.id,
-            action_item.name, 
-            item_type.description AS type,
-            item_rate.description,
-            item_rate.fee_per_hour
-        FROM 
-            action_item, 
-            item_type, 
-            item_rate
-        WHERE 
-            action_item.type_id = item_type.id AND
-            action_item.rate_id = item_rate.id AND
-            action_item.project_id = ?
+        SELECT  action_item.id,
+                action_item.name, 
+                item_type.description AS type,
+                item_rate.description,
+                item_rate.fee_per_hour
+        FROM    action_item, 
+                item_type, 
+                item_rate
+        WHERE   action_item.type_id = item_type.id 
+                AND action_item.rate_id = item_rate.id 
+                AND action_item.project_id = ?
         """, [project_id])
     return cur.fetchall()
     
 def get_project_phases(project_id):
     db = get_db()
     cur = db.execute("""
-        SELECT
-            id,
-            project_id,
-            number, 
-            (SELECT sum(strftime('%s', stop) - strftime('%s', start)) / 60.0 
-            FROM time_record 
-            WHERE phase_id = phase.id) AS phase_total
-        FROM 
-            phase
-        WHERE 
-            project_id = ?
-        ORDER BY 
-            number DESC;
+        SELECT  id,
+                project_id,
+                number, 
+                (SELECT sum(strftime('%s', stop) - strftime('%s', start)) / 60.0 
+                FROM    time_record 
+                WHERE   phase_id = phase.id) AS phase_total
+        FROM    phase
+        WHERE   project_id = ?
+        ORDER BY    number DESC;
         """, [project_id])
     
     return cur.fetchall()
@@ -190,17 +155,14 @@ def get_project_phases(project_id):
 def get_time_records_for_phases(phases):
     db = get_db()
     cur = db.execute("""
-        SELECT
-            action_item.name,
-            time_record.phase_id,
-            strftime('%Y-%m-%d', time_record.start) AS date,
-            (strftime('%s', time_record.stop) - strftime('%s', time_record.start)) / 60.0 AS total
-        FROM
-            action_item,
-            time_record
-        WHERE 
-            action_item.id = time_record.action_item_id AND 
-            time_record.phase_id in ({})
+        SELECT  action_item.name,
+                time_record.phase_id,
+                strftime('%Y-%m-%d', time_record.start) AS date,
+                (strftime('%s', time_record.stop) - strftime('%s', time_record.start)) / 60.0 AS total
+        FROM    action_item,
+                time_record
+        WHERE   action_item.id = time_record.action_item_id 
+                AND time_record.phase_id in ({})
         """.format(','.join(str(p['id']) for p in phases)))
     
     return cur.fetchall()
@@ -224,48 +186,34 @@ def get_bill_for_phase(phase_id):
     
     db = get_db()
     invoice = db.execute("""
-        SELECT
-            a.name,
-            a.phase_id,
-            a.date,
-            a.time_total,
-            (item_rate.fee_per_hour / 60.0 )* a.time_total AS money_total
-        FROM
-            item_rate, 
-            (SELECT
-                action_item.name,
-                action_item.rate_id,
-                time_record.phase_id,
-                strftime('%Y-%m-%d', time_record.start) AS date,
-                sum(strftime('%s', stop) - strftime('%s', start))/ 60.0 
-                    AS time_total
-            FROM
-                action_item,
-                time_record
-            WHERE
-                action_item.id = time_record.action_item_id
-                AND time_record.phase_id = ?
-            GROUP BY
-                action_item.id
+        SELECT  a.name,
+                a.phase_id,
+                a.date,
+                a.time_total,
+                (item_rate.fee_per_hour / 60.0 )* a.time_total AS money_total
+        FROM    item_rate, 
+                (SELECT action_item.name,
+                        action_item.rate_id,
+                        time_record.phase_id,
+                        strftime('%Y-%m-%d', time_record.start) AS date,
+                sum(strftime('%s', stop) - strftime('%s', start))/ 60.0 AS time_total
+                FROM    action_item,
+                        time_record
+                WHERE   action_item.id = time_record.action_item_id
+                        AND time_record.phase_id = ?
+                GROUP BY    action_item.id
             ) AS a
-        WHERE
-            a.rate_id = item_rate.id
+        WHERE   a.rate_id = item_rate.id
         """, [phase_id]).fetchall()
     office = db.execute("""
-            SELECT
-                office_serial AS serial,
-                tt_number
-            FROM
-                project
-            WHERE
-                project.id = (
-                    SELECT 
-                        project_id
-                    FROM
-                        phase
-                    WHERE
-                        phase.id = ?
-                )
+            SELECT  office_serial AS serial,
+                    tt_number
+            FROM    project
+            WHERE   project.id = (
+                        SELECT  project_id
+                        FROM    phase
+                        WHERE   phase.id = ?
+                    )
         """, [phase_id]).fetchone()
     # maybe i turn this into a query, someday.
     # someday...
@@ -282,18 +230,23 @@ def start_timing(item_id, phase_id):
     db = get_db()
     user = get_online_user()
     new_time = db.execute("""
-        INSERT INTO 
-            time_record (id, action_item_id, project_id, phase_id, start, stop)
-        VALUES 
-            (null, ?, ?, ?, datetime('now'), null)
+        INSERT INTO time_record (id, 
+                                 action_item_id, 
+                                 project_id, 
+                                 phase_id, 
+                                 start, 
+                                 stop)
+        VALUES      (null, 
+                    ?, 
+                    ?, 
+                    ?, 
+                    datetime('now'), 
+                    null)
         """, [item_id, user['viewing_project_id'], phase_id])
     db.execute("""
-        UPDATE 
-            online_users 
-        SET 
-            time_record_id = ?
-        WHERE 
-            user_id = ?
+        UPDATE  online_users 
+        SET     time_record_id = ?
+        WHERE   user_id = ?
         """, [new_time.lastrowid, user['user_id']])
     db.commit()
     
@@ -304,19 +257,13 @@ def stop_timing():
     db = get_db()
     user = get_online_user()
     db.executescript("""
-        UPDATE 
-            time_record 
-        SET 
-            stop = datetime('now')
-        WHERE 
-            id = {time_record_id};
+        UPDATE  time_record 
+        SET     stop = datetime('now')
+        WHERE   id = {time_record_id};
         
-        UPDATE 
-            online_users 
-        SET 
-            time_record_id=null
-        WHERE 
-            user_id = {user_id}
+        UPDATE  online_users 
+        SET     time_record_id=null
+        WHERE   user_id = {user_id}
         """.format(**user))
     db.commit()
     
@@ -330,46 +277,49 @@ def stop_timing():
         
 @app.before_request
 def check_user():
-    print request.full_path
+    """Makes sure the request is good and the user should be able
+    to access this site.
+    """
+    # early out for these links because everyone should access these
+    if request.endpoint in ('login', 'logout', 'static'):
+        return
     do_login = True
     session_id = session.get('session_id')
     if session_id is not None:
         db = get_db()
         cur = db.execute("""
-            SELECT 
-                * 
-            FROM 
-                online_users
-            WHERE 
-                session_id = ?
+            SELECT  * 
+            FROM    online_users
+            WHERE   session_id = ?
             """, [session_id])
         match = cur.fetchall()
         if match:
             do_login = False
-    if do_login and request.endpoint not in ('login', 'logout', 'static'):
+    #if do_login and not basic_access:
+    if do_login:
         return redirect(url_for('login'), code=401)
     # confirm privilege to access url provided
     user = get_online_user()
     if user:
         if 'navi' not in session:
             session['navi'] = [url[0][1:] for url in get_urls_for_user(user)]
-        # just a test until privs are needed
-        # print is_good_request()
-        print session['navi']
+        stop_access = True
         for url in session['navi']:
-            print url in request.full_path
+            if url in request.full_path:
+                stop_access = False
+        if stop_access:
+            return Response("Bollocks, can't go here", 500)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         db = get_db()
         result = db.execute("""
-            SELECT 
-                id, name, password
-            FROM 
-                user
-            WHERE 
-                name = ?
+            SELECT  id, 
+                    name, 
+                    password
+            FROM    user
+            WHERE   name = ?
         """, [request.form['name']]).fetchall()
         if not result:
             flash("No such username")
@@ -378,13 +328,14 @@ def login():
                 # create unique session_id to identify user
                 session['session_id'] = str(uuid4())
                 db.execute("""
-                    INSERT INTO 
-                        online_users(user_id, 
-                                    session_id, 
-                                    time_record_id, 
-                                    viewing_project_id) 
-                    VALUES 
-                        (?, ?, null, null)
+                    INSERT INTO online_users(user_id, 
+                                            session_id, 
+                                            time_record_id, 
+                                            viewing_project_id) 
+                    VALUES (?, 
+                            ?, 
+                            null, 
+                            null)
                     """, [user_id, session['session_id']])
                 db.commit()
                 flash("Welcome, {}".format(name))
@@ -403,10 +354,8 @@ def logout():
             stop_timing()
         db = get_db()
         db.execute("""
-            DELETE FROM 
-                online_users 
-            WHERE 
-                user_id = ?
+            DELETE FROM online_users 
+            WHERE       user_id = ?
             """, [user['user_id']])
     session.clear()
     db.commit()
@@ -431,12 +380,9 @@ def my_projects():
     types = db.execute("SELECT * FROM item_type").fetchall()
     action_items = get_project_items(user['viewing_project_id'])
     details = db.execute("""
-        SELECT 
-            * 
-        FROM 
-            project 
-        WHERE 
-            id = :project_id
+        SELECT  * 
+        FROM    project 
+        WHERE   id = :project_id
         """, [user['viewing_project_id']]).fetchone()
     phases = get_project_phases(user['viewing_project_id'])
     return render_template('my_projects.html', 
@@ -455,10 +401,18 @@ def add_project():
     # a status_id of 1 means Closed, so setting it to 2 is (for now)
     # the right way to keep the project visible to the user
     db.execute("""
-        INSERT INTO 
-            project (id, tt_number, user_id, description, notes, status_id)
-        VALUES 
-            (null, null, ?, null, null, 2)
+        INSERT INTO project (id, 
+                            tt_number, 
+                            user_id, 
+                            description, 
+                            notes, 
+                            status_id)
+        VALUES             (null, 
+                            null, 
+                            ?, 
+                            null, 
+                            null, 
+                            2)
         """, [user['user_id']])
     db.commit()
     projects = get_projects_for_user(user)
@@ -477,20 +431,14 @@ def expanded_project():
         "session_id": user['session_id']
     }
     details = db.execute("""
-        SELECT 
-            * 
-        FROM 
-            project 
-        WHERE 
-            id = :project_id
+        SELECT  * 
+        FROM    project 
+        WHERE   id = :project_id
         """, data).fetchone()
     db.execute("""
-        UPDATE 
-            online_users
-        SET 
-            viewing_project_id = :project_id
-        WHERE 
-            session_id = :session_id
+        UPDATE  online_users
+        SET     viewing_project_id = :project_id
+        WHERE   session_id = :session_id
         """, data)
     db.commit()
     action_items = get_project_items(data['project_id'])
@@ -525,20 +473,24 @@ def add_action_item():
     # new projects to -1 from the item editor
     if data['id'] == '-1':
         db.execute("""
-            INSERT INTO 
-                action_item (id, name, project_id, rate_id, type_id)
-            VALUES 
-                (null, :name, :project_id, :rate, :type)
+            INSERT INTO action_item (id, 
+                                    name, 
+                                    project_id, 
+                                    rate_id, 
+                                    type_id)
+            VALUES (null, 
+                    :name, 
+                    :project_id, 
+                    :rate, 
+                    :type)
             """, data)
     else:
         db.execute("""
-            UPDATE 
-                action_item
-            SET 
-                name=:name,
-                project_id=:project_id,
-                rate_id=:rate,
-                type_id=:type
+            UPDATE  action_item
+            SET     name=:name,
+                    project_id=:project_id,
+                    rate_id=:rate,
+                    type_id=:type
             WHERE 
                 id=:id
             """, data)
@@ -581,32 +533,28 @@ def time_action_item():
                                 action_items=action_items)
     else:
         latest_phase = db.execute("""
-                SELECT 
-                    max(id)
-                FROM 
-                    phase
-                WHERE 
-                    project_id = ?
+                SELECT  max(id)
+                FROM    phase
+                WHERE   project_id = ?
                 """, [project_id]).fetchone()[0]
         if latest_phase is None:
             latest_phase = db.execute("""
-                INSERT INTO 
-                    phase (id, project_id, number)
-                VALUES 
-                    (null, ?, 1)
+                INSERT INTO phase (id, 
+                                   project_id, 
+                                   number)
+                VALUES  (null, 
+                        ?, 
+                        1)
                 """, [project_id]).lastrowid
             db.commit()
         start_timing(item_to_time, latest_phase)
         db.commit()
         
         timed_item = db.execute("""
-            SELECT 
-                name, 
-                id 
-            FROM 
-                action_item
-            WHERE 
-                id = ?
+            SELECT  name, 
+                    id 
+            FROM    action_item
+            WHERE   id = ?
             """, [item_to_time]).fetchone()
         
         return render_template("currently_timing.html", 
@@ -629,22 +577,21 @@ def add_phase():
     # gets most recent phase number so it can be incremented; 
     # if no phase number found, sets to 1.
     last_phase = db.execute("""
-        SELECT 
-            max(number)
-        FROM 
-            phase
-        WHERE 
-            phase.project_id = ?
+        SELECT  max(number)
+        FROM    phase
+        WHERE   phase.project_id = ?
         """, [user['viewing_project_id']]).fetchone()[0]
     if last_phase is not None:
         next_phase = last_phase + 1
     else:
         next_phase = 1
     db.execute("""
-        INSERT INTO 
-            phase (id, project_id, number)
-        VALUES 
-            (null, ?, ?)
+        INSERT INTO phase (id, 
+                           project_id, 
+                           number)
+        VALUES  (null, 
+                ?, 
+                ?)
         """, [user['viewing_project_id'], next_phase])
     db.commit()
     
@@ -667,16 +614,13 @@ def update_details():
     data['project_id'] = user['viewing_project_id']
     db = get_db()    
     db.execute("""
-        UPDATE 
-            project
-        SET
-            tt_number = :tt_number,
-            office_serial = :office_serial,
-            description = :description,
-            notes = :notes,
-            status_id = :status
-        WHERE 
-            id = :project_id
+        UPDATE  project
+        SET     tt_number = :tt_number,
+                office_serial = :office_serial,
+                description = :description,
+                notes = :notes,
+                status_id = :status
+        WHERE   id = :project_id
         """, data)
     db.commit()
     projects = get_projects_for_user(user)
@@ -694,12 +638,9 @@ def send_invoice():
     invoice = get_bill_for_phase(request.data)
     db = get_db()
     user_email = db.execute("""
-            SELECT 
-                email
-            FROM 
-                user
-            WHERE 
-                id = ?
+            SELECT  email
+            FROM    user
+            WHERE   id = ?
         """, [get_online_user()['user_id']]).fetchone()[0]
     print user_email
     email_invoice(invoice, user_email)
@@ -734,20 +675,19 @@ def edit_rate():
     db = get_db()
     if data['id'] == '-1':
         db.execute("""
-            INSERT INTO
-                item_rate (id, description, fee_per_hour)
-            VALUES 
-                (null, :description, :fee_per_hour)
+            INSERT INTO item_rate (id, 
+                                   description, 
+                                   fee_per_hour)
+            VALUES  (null, 
+                    :description, 
+                    :fee_per_hour)
         """, data)
     else:
         db.execute("""
-            UPDATE 
-                item_rate
-            SET 
-                description = :description,
-                fee_per_hour = :fee_per_hour
-            WHERE 
-                id = :id
+            UPDATE  item_rate
+            SET     description = :description,
+                    fee_per_hour = :fee_per_hour
+            WHERE   id = :id
         
         """, data)
         
@@ -765,19 +705,16 @@ def edit_type():
     print data
     if data['id'] == '-1':
         db.execute("""
-            INSERT INTO
-                item_type (id, description)
-            VALUES 
-                (null, :description)
+            INSERT INTO item_type (id, 
+                                   description)
+            VALUES  (null, 
+                    :description)
         """, data)
     else:
         db.execute("""
-            UPDATE 
-                item_type
-            SET 
-                description = :description
-            WHERE 
-                id = :id
+            UPDATE  item_type
+            SET     description = :description
+            WHERE   id = :id
         
         """, data)
     db.commit()
@@ -794,12 +731,9 @@ def edit_type():
 def profile():
     db = get_db()
     user = db.execute("""
-            SELECT 
-                *
-            FROM 
-                user
-            WHERE 
-                id = :user_id
+            SELECT  *
+            FROM    user
+            WHERE   id = :user_id
         """, dict(get_online_user())).fetchone()
     return render_template('profile.html', 
                             user=user)

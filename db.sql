@@ -81,24 +81,21 @@ CREATE TABLE online_users (
 /* user groups, privileges etc*/
     
 INSERT into usergroup (id, name)
-    VALUES (null, 'SuperAdmin');
+    VALUES (null, 'Admin');
 
 INSERT into usergroup (id, name)
-    VALUES (null, 'EHR');
-    
-INSERT into usergroup (id, name)
-    VALUES (null, 'Accounting');
-    
-INSERT into permission (id, url)
-    VALUES (null, '/my_projects');
+    VALUES (null, 'General');
     
 INSERT into permission (id, url)
     VALUES (null, '/admin');
     
 INSERT into permission (id, url)
+    VALUES (null, '/my_projects');
+    
+INSERT into permission (id, url)
     VALUES (null, '/profile');
     
-/* ehr ties will be limited for test purposes */
+/* non-admin ties will be limited for test purposes */
 
 INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
     VALUES (null, 1, 1);
@@ -108,6 +105,14 @@ INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
 
 INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
     VALUES (null, 1, 3);
+
+INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
+    VALUES (null, 2, 2);
+
+INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
+    VALUES (null, 2, 3);
+
+
 
 /* to test features */
 
