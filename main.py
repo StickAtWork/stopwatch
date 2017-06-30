@@ -206,14 +206,14 @@ def get_bill_for_phase(phase_id):
         WHERE   a.rate_id = item_rate.id
         """, [phase_id]).fetchall()
     office = db.execute("""
-            SELECT  office_serial AS serial,
-                    tt_number
-            FROM    project
-            WHERE   project.id = (
-                        SELECT  project_id
-                        FROM    phase
-                        WHERE   phase.id = ?
-                    )
+        SELECT  office_serial AS serial,
+                tt_number
+        FROM    project
+        WHERE   project.id = (
+                    SELECT  project_id
+                    FROM    phase
+                    WHERE   phase.id = ?
+                )
         """, [phase_id]).fetchone()
     # maybe i turn this into a query, someday.
     # someday...
@@ -284,18 +284,18 @@ def check_user():
     if request.endpoint in ('login', 'logout', 'static'):
         return
     do_login = True
-    session_id = session.get('session_id')
-    if session_id is not None:
+    #session_id = session.get('session_id')
+    #if session_id is not None:
+    if 'session_id' in session:
         db = get_db()
         cur = db.execute("""
             SELECT  * 
             FROM    online_users
             WHERE   session_id = ?
-            """, [session_id])
+            """, [session['session_id']])
         match = cur.fetchall()
         if match:
             do_login = False
-    #if do_login and not basic_access:
     if do_login:
         return redirect(url_for('login'), code=401)
     # confirm privilege to access url provided
@@ -357,9 +357,8 @@ def logout():
             DELETE FROM online_users 
             WHERE       user_id = ?
             """, [user['user_id']])
-    session.clear()
-    db.commit()
-    print "{} after logout".format(session)
+        session.clear()
+        db.commit()
     flash("You logged out")
     return redirect(url_for('login'), code=302)
     
@@ -642,7 +641,7 @@ def send_invoice():
             FROM    user
             WHERE   id = ?
         """, [get_online_user()['user_id']]).fetchone()[0]
-    print user_email
+    #print user_email
     email_invoice(invoice, user_email)
     return """
             <div style="background-color:rgb(140, 140, 140)">
