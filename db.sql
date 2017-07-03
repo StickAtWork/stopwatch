@@ -3,7 +3,8 @@ CREATE TABLE action_item (
     name TEXT,
     project_id INTEGER,
     rate_id INTEGER,
-    type_id INTEGER
+    type_id INTEGER,
+    archived INTEGER DEFAULT 0
 );
 
 CREATE TABLE time_record (
@@ -17,12 +18,14 @@ CREATE TABLE time_record (
 
 CREATE TABLE item_rate (
     id INTEGER PRIMARY KEY, 
-    description TEXT,
-    fee_per_hour FLOAT
+    description TEXT DEFAULT 'New Item Rate',
+    fee_per_hour FLOAT DEFAULT '0.00',
+    archived INTEGER DEFAULT 0
 );
 CREATE TABLE item_type (
     id INTEGER PRIMARY KEY, 
-    description TEXT
+    description TEXT DEFAULT 'New Item Type',
+    archived INTEGER DEFAULT 0
 );
 
 CREATE TABLE project (
@@ -37,14 +40,16 @@ CREATE TABLE project (
 
 CREATE TABLE project_status (
     id INTEGER PRIMARY KEY,
-    description TEXT
+    description TEXT,
+    archived INTEGER DEFAULT 0
 );
 
 
 CREATE TABLE phase (
     id INTEGER PRIMARY KEY, 
     project_id INTEGER,
-    number INTEGER
+    number INTEGER,
+    archived INTEGER DEFAULT 0
 );
 
 CREATE TABLE user (
@@ -52,12 +57,14 @@ CREATE TABLE user (
     name TEXT,
     password TEXT,
     usergroup_id INTEGER,
-    email TEXT
+    email TEXT,
+    archived INTEGER DEFAULT 0
 );
 
 CREATE TABLE usergroup (
     id INTEGER PRIMARY KEY,
-    name TEXT
+    name TEXT,
+    archived INTEGER DEFAULT 0
 );
 
 CREATE TABLE permission (

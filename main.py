@@ -119,7 +119,9 @@ def get_projects_for_user(user):
         """, [user['user_id']])
     return cur.fetchall()
     
-def get_project_items(project_id):
+def get_open_project_items(project_id):
+    """Returns all project items that are not archived.
+    """
     db = get_db()
     cur = db.execute("""
         SELECT  action_item.id,
@@ -133,6 +135,7 @@ def get_project_items(project_id):
         WHERE   action_item.type_id = item_type.id 
                 AND action_item.rate_id = item_rate.id 
                 AND action_item.project_id = ?
+                AND action_item.archived != 1
         """, [project_id])
     return cur.fetchall()
     
@@ -225,6 +228,22 @@ def get_bill_for_phase(phase_id):
                             office=office,
                             invoice=invoice,
                             grand_totals=grand_totals)
+                            
+def get_open_rates():
+    db = get_db()
+    return db.execute("""
+        SELECT  * 
+        FROM    item_rate
+        WHERE archived != 1    
+        """).fetchall()
+    
+def get_open_types():
+    db = get_db()
+    return db.execute("""
+        SELECT  * 
+        FROM    item_type
+        WHERE   archived != 1    
+        """).fetchall()
     
 def start_timing(item_id, phase_id):
     db = get_db()
@@ -265,6 +284,26 @@ def stop_timing():
         SET     time_record_id=null
         WHERE   user_id = {user_id}
         """.format(**user))
+    db.commit()
+    
+def archive_record(table, id):
+    """Sets the archived flag of a record to 1.
+    
+    This can be a generic function since the only data
+    we need is the table name and the id of the record.
+    
+    sqlite3 doesn't let you parameterize column names, so
+    sadly we have to use str.format() to get the right
+    query. This should not be unsafe since the table name 
+    will only ever be passed from the function calling it
+    and won't come from forms submitted from the browser.
+    """
+    db = get_db()
+    db.execute("""
+        UPDATE  {}
+        SET     archived = 1
+        WHERE   id = {}
+        """.format(table, id))
     db.commit()
     
 #
@@ -375,9 +414,11 @@ def my_projects():
     user = get_online_user()
     projects = get_projects_for_user(user)
     db = get_db()
-    rates = db.execute("SELECT * FROM item_rate").fetchall()
-    types = db.execute("SELECT * FROM item_type").fetchall()
-    action_items = get_project_items(user['viewing_project_id'])
+    #rates = db.execute("SELECT * FROM item_rate").fetchall()
+    #types = db.execute("SELECT * FROM item_type").fetchall()
+    rates = get_open_rates()
+    types = get_open_types()
+    action_items = get_open_project_items(user['viewing_project_id'])
     details = db.execute("""
         SELECT  * 
         FROM    project 
@@ -440,9 +481,11 @@ def expanded_project():
         WHERE   session_id = :session_id
         """, data)
     db.commit()
-    action_items = get_project_items(data['project_id'])
-    rates = db.execute("SELECT * FROM item_rate").fetchall()
-    types = db.execute("SELECT * FROM item_type").fetchall()
+    action_items = get_open_project_items(data['project_id'])
+    #rates = db.execute("SELECT * FROM item_rate").fetchall()
+    #types = db.execute("SELECT * FROM item_type").fetchall()
+    rates = get_open_rates()
+    types = get_open_types()
     phases = get_project_phases(data['project_id'])
     time_records = get_time_records_for_phases(phases)
     
@@ -494,21 +537,16 @@ def add_action_item():
                 id=:id
             """, data)
     db.commit()
-    action_items = get_project_items(project_id)
+    action_items = get_open_project_items(project_id)
     return render_template("action_items.html", 
                             action_items=action_items)
 
 @app.route('/my_projects/delete_action_item', methods=['POST'])
 def delete_action_item():
-    db = get_db()
-    db.execute("""
-        DELETE FROM 
-            action_item
-        WHERE 
-            id = :item_id 
-        """, request.form)
-    db.commit()
-    action_items = get_project_items(get_online_user()['viewing_project_id'])
+    """Archives the action_item.
+    """
+    archive_record("action_item", request.form['item_id'])
+    action_items = get_open_project_items(get_online_user()['viewing_project_id'])
     return render_template("action_items.html", 
                             action_items=action_items)
     
@@ -527,7 +565,7 @@ def time_action_item():
     project_id = user['viewing_project_id']
     if user['time_record_id'] is not None:
         stop_timing()
-        action_items = get_project_items(project_id)
+        action_items = get_open_project_items(project_id)
         return render_template("action_items.html", 
                                 action_items=action_items)
     else:
@@ -668,9 +706,10 @@ def edit_rate():
     data = {k: v for k, v in request.form.iteritems()}
     # setting values so the query works properly - 'rate-id' needs
     # to be renamed and maybe some default values should be set
-    data['description'] = data.pop('description') or 'Default Title'
-    data['fee_per_hour'] = data.pop('fee_per_hour') or '0'
-    data['id'] = data.pop('rate-id')
+    data['description'] = data.pop('description') or None
+    data['fee_per_hour'] = data.pop('fee_per_hour') or 0
+    data['id'] = data.pop('rate-id', None)
+    #print data
     db = get_db()
     if data['id'] == '-1':
         db.execute("""
@@ -699,9 +738,9 @@ def edit_rate():
 def edit_type():
     db = get_db()
     data = {k: v for k, v in request.form.iteritems()}
-    data['id'] = data.pop('type-id')
-    data['description'] = data.pop('description') or 'Default Title'
-    print data
+    data['id'] = data.pop('type-id', None)
+    data['description'] = data.pop('description') or None
+    #print data
     if data['id'] == '-1':
         db.execute("""
             INSERT INTO item_type (id, 
@@ -714,7 +753,6 @@ def edit_type():
             UPDATE  item_type
             SET     description = :description
             WHERE   id = :id
-        
         """, data)
     db.commit()
     types = db.execute("SELECT * FROM item_type").fetchall()
