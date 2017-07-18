@@ -1,0 +1,12 @@
+<table id="type_table">
+    <tr>
+        <th>Description</th>
+        <th>Archived</th>
+    </tr>
+    {% for t in types -%}
+    <tr data-id="{{ t.id }}">
+        <td>{{ t.description }}</td>
+        <td>{{ t.archived }}</td>
+    </tr>
+    {%- endfor %}
+</table>

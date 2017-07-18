@@ -1,0 +1,23 @@
+<form id="user_editor">
+<input type="text" name="user-id" style="display: none" value="-1">
+Name: <input type="text" name="name">
+Email: <input type="text" name="email">    
+Usergroup: <select name="usergroup">
+        {% for g in groups -%}
+            <option value="{{g.id}}">
+            {{- g.name -}}
+            </option>
+        {%- endfor %}
+    </select>
+<button type="Submit"
+        value="Save"
+        formaction="{{ url_for('edit_user') }}">Save</button>
+<button type="Submit"
+        value="Delete"
+        formaction="{{ url_for('archive_user') }}">Archive</button>
+<button type="Submit"
+        value="Retrieve"
+        formaction="{{ url_for('retrieve_user') }}">Retrieve</button>
+</form>
+
+{% include 'user_table.html' %}

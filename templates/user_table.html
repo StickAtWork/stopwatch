@@ -1,0 +1,16 @@
+<table id="user_table">
+    <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Usergroup</th>
+        <th>Archived</th>
+    </tr>
+    {% for u in users -%}
+    <tr data-id="{{u.id}}">
+        <td>{{u.name}}</td>
+        <td>{{u.email}}</td>
+        <td>{{u.usergroup}}</td>
+        <td>{{u.archived}}</td>
+    </tr>
+    {%- endfor %}
+</table>

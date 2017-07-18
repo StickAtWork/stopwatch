@@ -1,0 +1,14 @@
+<table id="rate_table">
+    <tr>
+        <th>Description</th>
+        <th>Fee Per Hour</th>
+        <th>Archived</th>
+    </tr>
+    {% for r in rates -%}
+        <tr data-id="{{ r.id }}">
+            <td>{{ r.description }}</td>
+            <td>{{ "%0.2f" | format(r.fee_per_hour) }}</td>
+            <td>{{ r.archived }}</td>
+        </tr>
+    {%- endfor %}
+</table>

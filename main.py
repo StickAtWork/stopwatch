@@ -305,6 +305,39 @@ def archive_record(table, id):
         WHERE   id = {}
         """.format(table, id))
     db.commit()
+        
+def retrieve_record(table, id):
+    """Sets the archived flag of a record to 0.
+    
+    This can be a generic function since the only data
+    we need is the table name and the id of the record.
+    
+    sqlite3 doesn't let you parameterize column names, so
+    sadly we have to use str.format() to get the right
+    query. This should not be unsafe since the table name 
+    will only ever be passed from the function calling it
+    and won't come from forms submitted from the browser.
+    """
+    db = get_db()
+    db.execute("""
+        UPDATE  {}
+        SET     archived = 0
+        WHERE   id = {}
+        """.format(table, id))
+    db.commit()
+    
+def get_user_list():
+    db = get_db()
+    return db.execute("""
+        SELECT  user.id,
+                user.name,
+                user.email, 
+                usergroup.name AS usergroup,
+                user.archived
+        FROM    user,
+                usergroup
+        WHERE   user.usergroup_id = usergroup.id
+        """).fetchall()
     
 #
 #   Routing functions
@@ -359,6 +392,7 @@ def login():
                     password
             FROM    user
             WHERE   name = ?
+                    AND archived != 1
         """, [request.form['name']]).fetchall()
         if not result:
             flash("No such username")
@@ -596,6 +630,14 @@ def time_action_item():
         
         return render_template("currently_timing.html", 
                                 item=timed_item)
+                                
+@app.route('/my_projects/get_phases')
+def get_phases():
+    phases = get_project_phases(get_online_user()['viewing_project_id'])
+    time_records = get_time_records_for_phases(phases)
+    return render_template("phases.html",
+                            phases=phases,
+                            time_records=time_records)
         
 @app.route('/my_projects/add_phase', methods=['POST'])
 def add_phase():
@@ -697,9 +739,22 @@ def admin():
     db = get_db()
     rates = db.execute("SELECT * FROM item_rate").fetchall()
     types = db.execute("SELECT * FROM item_type").fetchall()
+    #users = db.execute("""
+    #    SELECT  user.id,
+    #            user.name,
+    #            user.email, 
+    #            usergroup.name AS usergroup
+    #    FROM    user,
+    #            usergroup
+    #    WHERE   user.usergroup_id = usergroup.id
+    #    """).fetchall()
+    users = get_user_list()
+    groups = db.execute("SELECT * FROM usergroup").fetchall()
     return render_template('admin.html', 
                             types=types, 
-                            rates=rates)
+                            rates=rates,
+                            users=users,
+                            groups=groups)
     
 @app.route('/admin/edit_rate', methods=['POST'])
 def edit_rate():
@@ -733,6 +788,23 @@ def edit_rate():
     rates = db.execute("SELECT * FROM item_rate").fetchall()
     return render_template('rate_editor.html', 
                             rates=rates)
+                            
+@app.route('/admin/archive_rate', methods=['POST'])
+def archive_rate():
+    archive_record('item_rate', request.form['rate-id'])
+    db = get_db()
+    rates = db.execute("SELECT * FROM item_rate").fetchall()
+    return render_template('rate_editor.html',
+                            rates=rates)
+                            
+@app.route('/admin/retrieve_rate', methods=['POST'])
+def retrieve_rate():
+    retrieve_record('item_rate', request.form['rate-id'])
+    db = get_db()
+    types = db.execute("SELECT * FROM item_rate").fetchall()
+    return render_template('rate_editor.html',
+                            rates=rates)
+    
     
 @app.route('/admin/edit_type', methods=['POST'])
 def edit_type():
@@ -758,6 +830,78 @@ def edit_type():
     types = db.execute("SELECT * FROM item_type").fetchall()
     return render_template('type_editor.html', 
                             types=types)
+                            
+@app.route('/admin/archive_type', methods=['POST'])
+def archive_type():
+    archive_record('item_type', request.form['type-id'])
+    db = get_db()
+    types = db.execute("SELECT * FROM item_type").fetchall()
+    return render_template('type_editor.html',
+                            types=types)
+
+@app.route('/admin/retrieve_type', methods=['POST'])
+def retrieve_type():
+    retrieve_record('item_type', request.form['type-id'])
+    db = get_db()
+    types = db.execute("SELECT * FROM item_type").fetchall()
+    return render_template('type_editor.html',
+                            types=types)
+                            
+@app.route('/admin/edit_user', methods=['POST'])
+def edit_user():
+    #print request.form
+    data = {k: v for k, v in request.form.iteritems()}
+    print data
+    data['id'] = data.pop('user-id')
+    data['usergroup_id'] = data.pop('usergroup')
+    db = get_db()
+    if data['id'] == '-1':
+        db.execute("""
+            INSERT INTO user   (id,
+                                name,
+                                email,
+                                usergroup_id)
+            VALUES  (null,
+                    :name,
+                    :email,
+                    :usergroup_id)
+        """, data)
+    else:
+        db.execute("""
+            UPDATE  user
+            SET     name = :name,
+                    email = :email,
+                    usergroup_id = :usergroup_id
+            WHERE   id = :id
+        """, data)
+    db.commit()
+    users = get_user_list()
+    groups = db.execute("""SELECT * from usergroup""")
+    return render_template("user_editor.html",
+                            users=users,
+                            groups=groups)   
+
+                         
+@app.route('/admin/archive_user', methods=['POST'])
+def archive_user():
+    archive_record("user", request.form['user-id'])
+    db = get_db()
+    users = get_user_list()
+    groups = db.execute("""SELECT * from usergroup""")
+    return render_template("user_editor.html",
+                            users=users,
+                            groups=groups)
+
+
+@app.route('/admin/retrieve_user', methods=['POST'])
+def retrieve_user():
+    retrieve_record("user", request.form['user-id'])
+    db = get_db()
+    users = get_user_list()
+    groups = db.execute("""SELECT * from usergroup""")
+    return render_template("user_editor.html",
+                            users=users,
+                            groups=groups)
     
 
 #
@@ -767,11 +911,12 @@ def edit_type():
 @app.route('/profile')
 def profile():
     db = get_db()
+    data = dict(get_online_user())
     user = db.execute("""
             SELECT  *
             FROM    user
             WHERE   id = :user_id
-        """, dict(get_online_user())).fetchone()
+        """, data).fetchone()
     return render_template('profile.html', 
                             user=user)
     

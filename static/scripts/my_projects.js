@@ -179,7 +179,17 @@ $(document).ready(function(){
             data: fdata
         }).success(function(data){
             $("#action_items .content").html(data);
-        });        
+        });
+        //when we stop timing we have to reload the phases too.
+        //this is not the greatest way to do this, but it is
+        //A Way To Do This, so yeah.
+        if ($this.attr('value') === 'Stop Timing') {
+            $.ajax({
+                url: 'my_projects/get_phases'
+            }).success(function(data){
+                $("#phases .content").html(data);
+            });
+        }
         return false;
     });
     
