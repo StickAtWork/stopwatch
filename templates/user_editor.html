@@ -18,6 +18,9 @@ Usergroup: <select name="usergroup">
 <button type="Submit"
         value="Retrieve"
         formaction="{{ url_for('retrieve_user') }}">Retrieve</button>
+<button type="Submit"
+        value="Reset Password"
+        formaction="{{ url_for('reset_password') }}">Reset Password</button>
 </form>
 
 {% include 'user_table.html' %}

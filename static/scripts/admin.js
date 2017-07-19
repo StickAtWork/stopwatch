@@ -26,8 +26,6 @@ $(document).ready(function(){
         
         //set both fields equal to the right values
         var $values = $('td', $this);
-        console.log($this);
-        console.log($values);
         $('input[name=description]', $editor).val($values[0].innerHTML);
         $('input[name=fee_per_hour]', $editor).val($values[1].innerHTML);
         $('input[name=rate-id]', $editor).attr('value', $this.attr('data-id'));

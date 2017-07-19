@@ -52,3 +52,26 @@ def email_invoice(invoice, user_email, cc_email=None):
     s = smtplib.SMTP('smtp.macpractice.com')
     s.sendmail(me, recips, msg.as_string())
     s.quit()
+    
+def email_new_password(password, user_email):
+    me = "mcp@stopwatch.com"
+    you = user_email
+    
+    msg = MIMEMultipart()
+    msg['Subject'] = "New Password"
+    msg['From'] = me
+    msg['To'] = you
+    
+    text = Message()
+    
+    text.set_payload("""
+    This is a test of the Stopwatch Password System.
+    
+    Your new password is: {}
+    
+    Thank you for choosing Stopwatch to time your projects.""".format(password))
+    msg.attach(text)
+    
+    s = smtplib.SMTP('smtp.macpractice.com')
+    s.sendmail(me, you, msg.as_string())
+    s.quit()

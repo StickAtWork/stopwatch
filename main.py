@@ -6,7 +6,8 @@ from flask import Flask, request, session, g, \
     redirect, url_for, abort, render_template, \
     flash, Response
     
-from mailer import email_invoice
+from mailer import email_invoice, email_new_password
+from pw_utils import random_password
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -356,8 +357,6 @@ def check_user():
     if request.endpoint in ('login', 'logout', 'static'):
         return
     do_login = True
-    #session_id = session.get('session_id')
-    #if session_id is not None:
     if 'session_id' in session:
         db = get_db()
         cur = db.execute("""
@@ -448,8 +447,6 @@ def my_projects():
     user = get_online_user()
     projects = get_projects_for_user(user)
     db = get_db()
-    #rates = db.execute("SELECT * FROM item_rate").fetchall()
-    #types = db.execute("SELECT * FROM item_type").fetchall()
     rates = get_open_rates()
     types = get_open_types()
     action_items = get_open_project_items(user['viewing_project_id'])
@@ -516,8 +513,6 @@ def expanded_project():
         """, data)
     db.commit()
     action_items = get_open_project_items(data['project_id'])
-    #rates = db.execute("SELECT * FROM item_rate").fetchall()
-    #types = db.execute("SELECT * FROM item_type").fetchall()
     rates = get_open_rates()
     types = get_open_types()
     phases = get_project_phases(data['project_id'])
@@ -721,7 +716,6 @@ def send_invoice():
             FROM    user
             WHERE   id = ?
         """, [get_online_user()['user_id']]).fetchone()[0]
-    #print user_email
     email_invoice(invoice, user_email)
     return """
             <div style="background-color:rgb(140, 140, 140)">
@@ -739,15 +733,6 @@ def admin():
     db = get_db()
     rates = db.execute("SELECT * FROM item_rate").fetchall()
     types = db.execute("SELECT * FROM item_type").fetchall()
-    #users = db.execute("""
-    #    SELECT  user.id,
-    #            user.name,
-    #            user.email, 
-    #            usergroup.name AS usergroup
-    #    FROM    user,
-    #            usergroup
-    #    WHERE   user.usergroup_id = usergroup.id
-    #    """).fetchall()
     users = get_user_list()
     groups = db.execute("SELECT * FROM usergroup").fetchall()
     return render_template('admin.html', 
@@ -764,7 +749,6 @@ def edit_rate():
     data['description'] = data.pop('description') or None
     data['fee_per_hour'] = data.pop('fee_per_hour') or 0
     data['id'] = data.pop('rate-id', None)
-    #print data
     db = get_db()
     if data['id'] == '-1':
         db.execute("""
@@ -801,7 +785,7 @@ def archive_rate():
 def retrieve_rate():
     retrieve_record('item_rate', request.form['rate-id'])
     db = get_db()
-    types = db.execute("SELECT * FROM item_rate").fetchall()
+    rates = db.execute("SELECT * FROM item_rate").fetchall()
     return render_template('rate_editor.html',
                             rates=rates)
     
@@ -812,7 +796,6 @@ def edit_type():
     data = {k: v for k, v in request.form.iteritems()}
     data['id'] = data.pop('type-id', None)
     data['description'] = data.pop('description') or None
-    #print data
     if data['id'] == '-1':
         db.execute("""
             INSERT INTO item_type (id, 
@@ -849,23 +832,33 @@ def retrieve_type():
                             
 @app.route('/admin/edit_user', methods=['POST'])
 def edit_user():
-    #print request.form
     data = {k: v for k, v in request.form.iteritems()}
-    print data
     data['id'] = data.pop('user-id')
     data['usergroup_id'] = data.pop('usergroup')
     db = get_db()
     if data['id'] == '-1':
+        # EW FUTURE PROOFING
+        # actually i just think this is a really primitive
+        # way to handle this issue, but it will work for now.
+        #
+        # it MIGHT be ideal to let the admin user just set the password
+        # in the future but for now it's desired to keep passwords as secret
+        # as they can be
+        if 'password' not in data:
+            data['password'] = random_password()
         db.execute("""
             INSERT INTO user   (id,
                                 name,
                                 email,
+                                password,
                                 usergroup_id)
             VALUES  (null,
                     :name,
                     :email,
+                    :password,
                     :usergroup_id)
         """, data)
+        email_new_password(data['password'], data['email'])
     else:
         db.execute("""
             UPDATE  user
@@ -902,12 +895,34 @@ def retrieve_user():
     return render_template("user_editor.html",
                             users=users,
                             groups=groups)
-    
+                            
+@app.route('/admin/reset_password', methods=['POST'])
+def reset_password():
+    if request.form['user-id'] == '-1':
+        return Response("You gotta select somebody, gosh", 500)
+    data = {
+        "id": request.form['user-id'],
+        "password": random_password()
+    }
+    db = get_db()
+    db.execute("""
+        UPDATE  user
+        SET     password = :password
+        WHERE   id = :id
+    """, data)
+    email_new_password(data['password'], request.form['email'])
+    db.commit()
+    users = get_user_list()
+    groups = db.execute("""SELECT * from usergroup""")
+    return render_template("user_editor.html",
+                            users=users,
+                            groups=groups)
+
 
 #
 #   Profile page
 #
-    
+
 @app.route('/profile')
 def profile():
     db = get_db()
@@ -919,6 +934,9 @@ def profile():
         """, data).fetchone()
     return render_template('profile.html', 
                             user=user)
+#
+#   makes it go!
+#
     
 if __name__ == '__main__':
     with app.app_context():
