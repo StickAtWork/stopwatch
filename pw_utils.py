@@ -16,9 +16,8 @@ def random_password():
     password = ''
     while len(password) < 6:
         if len(password) % 2:
-            password += choice(VOWS)
+            password = "{}{}".format(password, choice(VOWS))
         else:
-            password += choice(CONS)
-    password += choice(NUMS)
-    password += choice(SYMS)
+            password = "{}{}".format(password, choice(CONS))
+    password = "{}{}{}".format(password, choice(NUMS), choice(SYMS))
     return password

@@ -716,7 +716,7 @@ def send_invoice():
             FROM    user
             WHERE   id = ?
         """, [get_online_user()['user_id']]).fetchone()[0]
-    email_invoice(invoice, user_email)
+    email_invoice(user_email, invoice)
     return """
             <div style="background-color:rgb(140, 140, 140)">
                 <h1>Sent invoice</h1>
@@ -858,7 +858,7 @@ def edit_user():
                     :password,
                     :usergroup_id)
         """, data)
-        email_new_password(data['password'], data['email'])
+        email_new_password(data['email'], data['name'], data['password'])
     else:
         db.execute("""
             UPDATE  user
@@ -910,7 +910,7 @@ def reset_password():
         SET     password = :password
         WHERE   id = :id
     """, data)
-    email_new_password(data['password'], request.form['email'])
+    email_new_password(request.form['email'], request.form['name'], data['password'])
     db.commit()
     users = get_user_list()
     groups = db.execute("""SELECT * from usergroup""")
