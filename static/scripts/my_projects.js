@@ -62,6 +62,16 @@ $(document).ready(function(){
         }
     });
     
+    $(window).on('beforeunload', function(e){
+        if ($("#currently-timing").length) {
+            //i guess we don't do custom alert messages anymore?
+            //thanks guys
+            return "Do you want to leave?\n\n" + 
+                    "You will automatically stop timing.";
+        }
+        
+    });
+    
     
     
     /*  handlers for expanded project view
