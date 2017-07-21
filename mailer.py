@@ -20,9 +20,6 @@ def email_invoice(user_email, invoice, cc_email=None):
     
     me = "invoice@stopwatch.com"
     you = user_email
-    #cc = "emr@macpractice.com"
-    
-    #recips = [you, cc]
     
     msg = MIMEMultipart()
     msg['Subject'] = "Testing"
@@ -36,7 +33,11 @@ def email_invoice(user_email, invoice, cc_email=None):
     
     text = Message()
     
-    text.set_payload("This is a test of the Stopwatch Invoice System. \n\n")
+    text.set_payload("""
+    This is a test of the Stopwatch Invoice System. 
+    
+    Eventually this invoice will go to Accounting, for now it is going to you. 
+    """)
     msg.attach(text)
     
     # preps invoice to be an attachment
@@ -80,7 +81,9 @@ def email_new_password(user_email, username, password):
     Your username is: {}
     Your password is: {}
     
-    One day you'll be able to set your own, but... not now.""".format(username, password))
+    One day you'll be able to set your own, but... not now.
+    """.format(username, password))
+    
     msg.attach(text)
     
     s = smtplib.SMTP('smtp.macpractice.com')

@@ -517,6 +517,8 @@ def expanded_project():
     types = get_open_types()
     phases = get_project_phases(data['project_id'])
     time_records = get_time_records_for_phases(phases)
+    #for record in time_records:
+    #    print "---RECORD TOTAL IS {}".format(record.total)
     
     return render_template('expanded_project.html',
                             details=details,
