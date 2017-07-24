@@ -936,6 +936,81 @@ def profile():
         """, data).fetchone()
     return render_template('profile.html', 
                             user=user)
+                            
+@app.route('/profile/edit_profile', methods=['POST'])
+def edit_profile():
+    """Updates the user profile with the provided information.
+    
+    Does NOT return a template because there should be no
+    reason to return data that is already represented in the
+    current view.
+    """
+    data = {}
+    for k, v in request.form.iteritems():
+        if not v:
+            return Response("Required: {}".format(k), 500)
+        else:
+            data[k] = v
+    data['id'] = get_online_user()['user_id']
+    #print data
+    db = get_db()
+    db.execute("""
+        UPDATE  user
+        SET     name=:name,
+                email=:email
+        WHERE   id=:id
+    """, data)
+    db.commit()
+    return ''
+    
+@app.route('/profile/edit_password', methods=['POST'])
+def edit_password():
+    """Updates the user password.
+    
+    Does NOT return a template because there should be no
+    reason to return data that is already represented in the
+    current view.
+    """
+    data = {}
+    for k, v in request.form.iteritems():
+        if not v:
+            # don't want blanks for this kind of
+            # data entry, nope nope
+            return Response("Required: {} password".format(k), 500)
+        else:
+            data[k] = v
+    db = get_db()
+    # confirms that the password is correct
+    # AND is for the online_user.
+    # unlike other record ids this one isn't
+    # stored on the page so I'm getting it out
+    # of the db
+    confirm = {
+        "id": get_online_user()['user_id'],
+        "password": data['old']
+    }
+    user = db.execute("""
+        SELECT  *
+        FROM    user
+        WHERE   id = :id
+                AND password = :password
+        """, confirm).fetchone()
+    if user:
+        id_pw = {
+            "id": confirm['id'],
+            "password": data['new']
+        }
+        db.execute("""
+            UPDATE  user
+            SET     password = :password
+            WHERE   id = :id
+        """, id_pw)
+        email_new_password(user['email'], user['name'], id_pw['password'])
+        db.commit()
+    else:
+        return Response('No match for that password', 500)
+    return ''
+
 #
 #   makes it go!
 #

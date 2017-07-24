@@ -76,12 +76,12 @@ def email_new_password(user_email, username, password):
     text.set_payload("""
     Hey,
     
-    Your Stopwatch password was reset.
+    Your Stopwatch password was changed.
     
     Your username is: {}
     Your password is: {}
     
-    One day you'll be able to set your own, but... not now.
+    If you received this message in error, contact an admin.
     """.format(username, password))
     
     msg.attach(text)

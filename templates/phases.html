@@ -26,11 +26,7 @@
                 <tr>
                     <td>{{ record.date }}</td>
                     <td>{{ record.name }}</td>
-                    {% if record.total %}
-                    <td>{{ "%.02f" | format(record.total) }}</td>
-                    {% else %}
-                    <td>None</td>
-                    {% endif %}
+                    <td>{{ "%.02f" | format(record.total or 0) }}</td>
                 </tr>
                 {% endif %}
             {% endfor %}
@@ -38,11 +34,7 @@
                     <tr>
                         <td>Total Time</td>
                         <td></td>
-                        {% if phase.phase_total %}
-                        <td>{{ "%.02f" | format(phase.phase_total) }}</td>
-                        {% else %}
-                        <td>None</td>
-                        {% endif %}
+                        <td>{{ "%.02f" | format(phase.phase_total or 0) }}</td>
                     </tr>
                 </tfoot>
             </table>

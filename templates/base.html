@@ -21,9 +21,9 @@
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             <span id="messages">
-            {% for m in messages %}
+            {% for m in messages -%}
                 {{ m }}
-            {% endfor %}
+            {%- endfor %}
             </span>
         {% endif %}
     {% endwith %}
