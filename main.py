@@ -961,7 +961,7 @@ def edit_profile():
         WHERE   id=:id
     """, data)
     db.commit()
-    return ''
+    return Response('Information updated.', 500)
     
 @app.route('/profile/edit_password', methods=['POST'])
 def edit_password():
@@ -1009,7 +1009,7 @@ def edit_password():
         db.commit()
     else:
         return Response('No match for that password', 500)
-    return ''
+    return Response('Password changed, email sent to {}'.format(user['email']), 500)
 
 #
 #   makes it go!
