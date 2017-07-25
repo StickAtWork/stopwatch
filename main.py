@@ -159,9 +159,12 @@ def get_project_phases(project_id):
 def get_time_records_for_phases(phases):
     db = get_db()
     cur = db.execute("""
-        SELECT  action_item.name,
+        SELECT  time_record.id,
+                action_item.name,
                 time_record.phase_id,
                 strftime('%Y-%m-%d', time_record.start) AS date,
+                time_record.start,
+                time_record.stop,
                 (strftime('%s', time_record.stop) - strftime('%s', time_record.start)) / 60.0 AS total
         FROM    action_item,
                 time_record
@@ -1010,6 +1013,48 @@ def edit_password():
     else:
         return Response('No match for that password', 500)
     return Response('Password changed, email sent to {}'.format(user['email']), 500)
+    
+@app.route('/adjustments')
+def adjustments():
+    return render_template('adjustments.html')
+    
+@app.route('/adjustments/search_by_project', methods=['POST'])
+def search_by_project():
+    phases = get_project_phases(request.form['project-id'])
+    time_records = get_time_records_for_phases(phases)
+    return render_template("adjustment_search_results.html",
+                            phases=phases,
+                            time_records=time_records)
+                            
+@app.route('/adjustments/edit_time_records', methods=['POST'])
+def edit_time_records():
+    # some kind of verification shit
+    #print request.form
+    data = {}
+    for k, v in request.form.iteritems():
+        if k in ('start', 'stop'):
+            try:
+                valid = datetime.datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                return Response('{} was not a valid datetime.'.format(k), 500)
+            else:
+                data[k] = v
+    data['id'] = request.form['record-id']
+    #print data
+    db = get_db()
+    db.execute("""
+        UPDATE  time_record
+        SET     start=:start,
+                stop=:stop
+        WHERE   id=:id
+    """, data)
+    db.commit()
+    phases = get_project_phases(request.form['project-id'])
+    time_records = get_time_records_for_phases(phases)
+    return render_template("adjustment_search_results.html",
+                            phases=phases,
+                            time_records=time_records)
+    
 
 #
 #   makes it go!

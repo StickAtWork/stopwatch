@@ -1,0 +1,43 @@
+{% if phases %}
+    {% for phase in phases %}
+        <div class="shutter">{{phase.number}}</div>
+        <div class="indent">
+        {% if phase.phase_total %}
+            <table data-project-id="{{ phase.project_id }}">
+                <tr>
+                    <th>Date</th>
+                    <th>Name</th>
+                    <th>Time (Minutes)</th>
+                    <th>Start</th>
+                    <th>Stop</th>
+                </tr>
+            {% for record in time_records %}
+                {% if record.phase_id == phase.id %}
+                <tr data-record-id="{{ record.id }}">
+                    <td>{{ record.date }}</td>
+                    <td>{{ record.name }}</td>
+                    <td>{{ "%.02f" | format(record.total or 0) }}</td>
+                    <td><input type="text" 
+                               name="start" 
+                               value="{{ record.start }}">
+                    </td>
+                    <td><input type="text" 
+                               name="stop" value="{{ record.stop }}">
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+                <tfoot>
+                    <tr>
+                        <td>Total Time</td>
+                        <td></td>
+                        <td>{{ "%.02f" | format(phase.phase_total or 0) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        {% else %}
+        No time records associated to this phase.
+        {% endif %}
+        </div>
+    {% endfor %}
+{% else %}No results.{% endif %}
