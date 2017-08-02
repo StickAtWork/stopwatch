@@ -41,6 +41,7 @@ div#invoice {
     <tr>
         <th>Date</th>
         <th>Name</th>
+        <th>Type</th>
         <th>Time (Minutes)</th>
         <th>Sub-total</th>
     </tr>
@@ -48,6 +49,7 @@ div#invoice {
     <tr>
         <td>{{ record.date }}</td>
         <td>{{ record.name }}</td>
+        <td>{{ record.type }}</td>
         <td>{{ "%.02f" | format(record.time_total) }}</td>
         <td>{{ "$%.02f" | format(record.money_total) }}</td>
     </tr>
@@ -55,6 +57,7 @@ div#invoice {
     <tfoot>
     <tr>
         <td>Total</td>
+        <td></td>
         <td></td>
         <td>{{ "%.02f" | format(grand_totals.time) }}</td>
         <td>{{ "$%.02f" | format(grand_totals.money) }}</td>

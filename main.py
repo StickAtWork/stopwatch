@@ -95,14 +95,14 @@ def get_urls_for_user(user):
         SELECT  url
         FROM    permission
         WHERE   id in (
-                SELECT  permission_id
-                FROM    usergroup_permission_tie
-                WHERE   usergroup_id = (
-                        SELECT  usergroup_id
-                        FROM    user
-                        WHERE   id = ?
-                    )
-            )
+                    SELECT  permission_id
+                    FROM    usergroup_permission_tie
+                    WHERE   usergroup_id = (
+                                SELECT  usergroup_id
+                                FROM    user
+                                WHERE   id = ?
+                            )
+                )
         """, [user['user_id']])
     return cur.fetchall()
     
@@ -195,12 +195,16 @@ def get_bill_for_phase(phase_id):
     invoice = db.execute("""
         SELECT  a.name,
                 a.phase_id,
+                a.type,
                 a.date,
                 a.time_total,
                 (item_rate.fee_per_hour / 60.0 )* a.time_total AS money_total
         FROM    item_rate, 
                 (SELECT action_item.name,
                         action_item.rate_id,
+                        (SELECT description
+                        FROM    item_type
+                        WHERE   item_type.id = action_item.type_id) AS type,
                         time_record.phase_id,
                         strftime('%Y-%m-%d', time_record.start) AS date,
                 sum(strftime('%s', stop) - strftime('%s', start))/ 60.0 AS time_total
@@ -222,8 +226,8 @@ def get_bill_for_phase(phase_id):
                     WHERE   phase.id = ?
                 )
         """, [phase_id]).fetchone()
-    # maybe i turn this into a query, someday.
-    # someday...
+    # this seems like it should be rolled into a query
+    # but this will do for now
     grand_totals = {
         'time': sum(x['time_total'] for x in invoice),
         'money': sum(y['money_total'] for y in invoice)
@@ -238,7 +242,7 @@ def get_open_rates():
     return db.execute("""
         SELECT  * 
         FROM    item_rate
-        WHERE archived != 1    
+        WHERE   archived != 1    
         """).fetchall()
     
 def get_open_types():
@@ -356,7 +360,8 @@ def check_user():
     """Makes sure the request is good and the user should be able
     to access this site.
     """
-    # early out for these links because everyone should access these
+    # early returns for these links.
+    # everyone should access these
     if request.endpoint in ('login', 'logout', 'static'):
         return
     do_login = True
@@ -386,6 +391,12 @@ def check_user():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # i think this is the best way to take care
+    # of lingering permissions from old sessions?
+    # if there is no match, and do_login is still true,
+    # then the session should be cleared because we wouldn't
+    # care about any session data anyway.
+    session.clear()
     if request.method == 'POST':
         db = get_db()
         result = db.execute("""
@@ -475,12 +486,12 @@ def add_project():
     # a status_id of 1 means Closed, so setting it to 2 is (for now)
     # the right way to keep the project visible to the user
     db.execute("""
-        INSERT INTO project (id, 
-                            tt_number, 
-                            user_id, 
-                            description, 
-                            notes, 
-                            status_id)
+        INSERT INTO project     (id, 
+                                tt_number, 
+                                user_id, 
+                                description, 
+                                notes, 
+                                status_id)
         VALUES             (null, 
                             null, 
                             ?, 
@@ -520,8 +531,6 @@ def expanded_project():
     types = get_open_types()
     phases = get_project_phases(data['project_id'])
     time_records = get_time_records_for_phases(phases)
-    #for record in time_records:
-    #    print "---RECORD TOTAL IS {}".format(record.total)
     
     return render_template('expanded_project.html',
                             details=details,
@@ -563,12 +572,12 @@ def add_action_item():
     else:
         db.execute("""
             UPDATE  action_item
-            SET     name=:name,
-                    project_id=:project_id,
-                    rate_id=:rate,
-                    type_id=:type
+            SET     name = :name,
+                    project_id = :project_id,
+                    rate_id = :rate,
+                    type_id = :type
             WHERE 
-                id=:id
+                id = :id
             """, data)
     db.commit()
     action_items = get_open_project_items(project_id)
@@ -728,9 +737,9 @@ def send_invoice():
             </div>
             """
 
-#
-#   Admin page
-#
+#   #
+#   #   Admin page
+#   #
 
 
 @app.route('/admin', methods=['GET'])
@@ -904,7 +913,7 @@ def retrieve_user():
 @app.route('/admin/reset_password', methods=['POST'])
 def reset_password():
     if request.form['user-id'] == '-1':
-        return Response("You gotta select somebody, gosh", 500)
+        return Response("No user selected", 500)
     data = {
         "id": request.form['user-id'],
         "password": random_password()
@@ -915,7 +924,9 @@ def reset_password():
         SET     password = :password
         WHERE   id = :id
     """, data)
-    email_new_password(request.form['email'], request.form['name'], data['password'])
+    email_new_password(request.form['email'], 
+                       request.form['name'], 
+                       data['password'])
     db.commit()
     users = get_user_list()
     groups = db.execute("""SELECT * from usergroup""")
@@ -924,9 +935,9 @@ def reset_password():
                             groups=groups)
 
 
-#
-#   Profile page
-#
+#   #
+#   #   Profile page
+#   #
 
 @app.route('/profile')
 def profile():
@@ -955,13 +966,12 @@ def edit_profile():
         else:
             data[k] = v
     data['id'] = get_online_user()['user_id']
-    #print data
     db = get_db()
     db.execute("""
         UPDATE  user
-        SET     name=:name,
-                email=:email
-        WHERE   id=:id
+        SET     name = :name,
+                email = :email
+        WHERE   id = :id
     """, data)
     db.commit()
     return Response('Information updated.', 500)
@@ -1028,25 +1038,28 @@ def search_by_project():
                             
 @app.route('/adjustments/edit_time_records', methods=['POST'])
 def edit_time_records():
-    # some kind of verification shit
-    #print request.form
     data = {}
     for k, v in request.form.iteritems():
+        # verify that the timestamps entered are legitimate
+        # datetime values. if they are, add them to the data dict.
+        # if they are not, send response to the user.
         if k in ('start', 'stop'):
             try:
-                valid = datetime.datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
+                datetime.datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
             except ValueError:
-                return Response('{} was not a valid datetime.'.format(k), 500)
+                return Response('\n'.join([
+                    "'{}' was not a valid datetime.".format(k.capitalize()),
+                    "Valid datetimes are yyyy-mm-dd 24:00:00."
+                    ]), 500)
             else:
                 data[k] = v
     data['id'] = request.form['record-id']
-    #print data
     db = get_db()
     db.execute("""
         UPDATE  time_record
-        SET     start=:start,
-                stop=:stop
-        WHERE   id=:id
+        SET     start = :start,
+                stop = :stop
+        WHERE   id = :id
     """, data)
     db.commit()
     phases = get_project_phases(request.form['project-id'])
