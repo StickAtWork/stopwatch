@@ -10,6 +10,7 @@
                     <th>Time (Minutes)</th>
                     <th>Start</th>
                     <th>Stop</th>
+                    <th>Phase</th>
                 </tr>
             {% for record in time_records %}
                 {% if record.phase_id == phase.id %}
@@ -23,6 +24,12 @@
                     </td>
                     <td><input type="text" 
                                name="stop" value="{{ record.stop }}">
+                    </td>
+                    <td><select name="phase">
+                            {% for p in phases %}
+                            <option value="{{ p.id }}" {{'selected' if p.number == phase.number}}>{{ p.number }}</option>
+                            {%- endfor %}
+                        </select> 
                     </td>
                 </tr>
                 {% endif %}

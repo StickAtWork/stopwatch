@@ -1054,11 +1054,13 @@ def edit_time_records():
             else:
                 data[k] = v
     data['id'] = request.form['record-id']
+    data['phase_id'] = request.form['phase']
     db = get_db()
     db.execute("""
         UPDATE  time_record
         SET     start = :start,
-                stop = :stop
+                stop = :stop,
+                phase_id = :phase_id
         WHERE   id = :id
     """, data)
     db.commit()
