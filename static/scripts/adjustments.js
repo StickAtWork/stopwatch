@@ -1,7 +1,8 @@
 $(document).ready(function(){
     var $main = $('#main');
+    
+    /* initial search for the project_id */
     $('button[type=submit]').on('click', function(){
-        //alert('oh yeah');
         var $this = $(this);
         var fdata = $this.parent().serializeArray();
         $.ajax({
@@ -14,6 +15,7 @@ $(document).ready(function(){
         return false;
     });
     
+    /* sends any changes to a row back to the db to auto-update */
     $main.on('change', '#adjustment_search_results input, ' + 
                        '#adjustment_search_results select', function(){
         var $this_row = $(this).parents('tr');

@@ -14,7 +14,8 @@
                 </tr>
             {% for record in time_records %}
                 {% if record.phase_id == phase.id %}
-                <tr data-record-id="{{ record.id }}">
+                <tr data-record-id="{{ record.id }}"
+                    class={{ "selected" if record.id == last_record_altered }}>
                     <td>{{ record.date }}</td>
                     <td>{{ record.name }}</td>
                     <td>{{ "%.02f" | format(record.total or 0) }}</td>

@@ -1066,9 +1066,11 @@ def edit_time_records():
     db.commit()
     phases = get_project_phases(request.form['project-id'])
     time_records = get_time_records_for_phases(phases)
+    print data['id']
     return render_template("adjustment_search_results.html",
                             phases=phases,
-                            time_records=time_records)
+                            time_records=time_records,
+                            last_record_altered=int(data['id']))
     
 
 #
