@@ -74,9 +74,3 @@ tr.selected, tr:nth-child(even).selected {
 #currently-timing tr.selected {
     background-color: rgb(180, 80, 80);
 }
-
-/* move to adjustments.css? */
-
-tr.last-altered {
-    border: 2px solid rgb(50, 180, 50);
-}

@@ -1066,7 +1066,6 @@ def edit_time_records():
     db.commit()
     phases = get_project_phases(request.form['project-id'])
     time_records = get_time_records_for_phases(phases)
-    print data['id']
     return render_template("adjustment_search_results.html",
                             phases=phases,
                             time_records=time_records,
@@ -1080,4 +1079,4 @@ def edit_time_records():
 if __name__ == '__main__':
     with app.app_context():
         init_db()
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0')

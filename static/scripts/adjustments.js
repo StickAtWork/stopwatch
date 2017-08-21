@@ -16,9 +16,12 @@ $(document).ready(function(){
     });
     
     /* sends any changes to a row back to the db to auto-update */
-    $main.on('change', '#adjustment_search_results input, ' + 
-                       '#adjustment_search_results select', function(){
+    $('#adjustment_search_results', $main).on('change', 
+                                              'input, select', 
+                                              function() {
         var $this_row = $(this).parents('tr');
+        //can't just use serializeArray() because of how the elements
+        //are nested. so this is a lot of code but it works right.
         var fdata = {
             "project-id": $this_row.parents('table').attr('data-project-id'),
             "record-id": $this_row.attr('data-record-id'),
