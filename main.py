@@ -14,7 +14,7 @@ app.config.from_object(__name__)
 
 app.config.update({
     "DATABASE": os.path.join(app.root_path, 'stopwatch.db'),
-    "SECRET_KEY": 'dev key',
+    "SECRET_KEY": os.urandom(24),
     "USERNAME": 'admin',
     "PASSWORD": 'default'
 })
@@ -157,14 +157,28 @@ def get_project_phases(project_id):
     return cur.fetchall()
     
 def get_time_records_for_phases(phases):
+    """Retrieves the time records for all phases.
+    
+    The database saves time_record.start and time_record.stop without accounting
+    for localization. Thus when we VIEW the timestamps, in order for them to
+    make sense, they need to be converted to locatime.
+    
+    This is *particularly* important for times when timestamps are manually
+    adjusted!! The server should RETURN localized timestamps but should be GIVEN
+    UTC timestamps. 
+    
+    Some parts of the software do not need to account for this,
+    like toggling timing on/off, or just calculating the difference.
+    
+    """
     db = get_db()
     cur = db.execute("""
         SELECT  time_record.id,
                 action_item.name,
                 time_record.phase_id,
-                strftime('%Y-%m-%d', time_record.start) AS date,
-                time_record.start,
-                time_record.stop,
+                strftime('%Y-%m-%d', datetime(time_record.start, 'localtime')) AS date,
+                datetime(time_record.start, 'localtime') AS start,
+                datetime(time_record.stop, 'localtime') AS stop,
                 (strftime('%s', time_record.stop) - strftime('%s', time_record.start)) / 60.0 AS total
         FROM    action_item,
                 time_record
@@ -1038,6 +1052,14 @@ def search_by_project():
                             
 @app.route('/adjustments/edit_time_records', methods=['POST'])
 def edit_time_records():
+    """Allows user to manually modify time_records.
+    
+    The timestamps are saved in the database as UTC timestamps during the
+    start/stop timing process, but this view needs to convert them to localtime
+    in order for manual edits to make any sense. For that reason they are 
+    converted back to UTC before they are saved again.
+    
+    """
     data = {}
     for k, v in request.form.iteritems():
         # verify that the timestamps entered are legitimate
@@ -1056,10 +1078,11 @@ def edit_time_records():
     data['id'] = request.form['record-id']
     data['phase_id'] = request.form['phase']
     db = get_db()
+    # Notice the timestamp converts back to UTC here
     db.execute("""
         UPDATE  time_record
-        SET     start = :start,
-                stop = :stop,
+        SET     start = datetime(:start, 'utc'),
+                stop = datetime(:stop, 'utc'),
                 phase_id = :phase_id
         WHERE   id = :id
     """, data)
