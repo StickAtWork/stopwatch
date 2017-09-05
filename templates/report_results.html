@@ -1,0 +1,12 @@
+<table id="report-results">
+    <tr>
+        <th>Item Type</th>
+        <th>Total Time (Minutes)</th>
+    </tr>
+    {% for row in results %}
+    <tr>
+        <td>{{ row.description }}</td>
+        <td>{{ "%.02f" | format(row.total) }}</td>
+    </tr>
+    {% endfor %}
+</table>

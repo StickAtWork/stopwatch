@@ -1067,14 +1067,14 @@ def edit_time_records():
         # if they are not, send response to the user.
         if k in ('start', 'stop'):
             try:
-                datetime.datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
+                data[k] = datetime.datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
             except ValueError:
                 return Response('\n'.join([
                     "'{}' was not a valid datetime.".format(k.capitalize()),
                     "Valid datetimes are yyyy-mm-dd 24:00:00."
                     ]), 500)
-            else:
-                data[k] = v
+            #else:
+            #    data[k] = v
     data['id'] = request.form['record-id']
     data['phase_id'] = request.form['phase']
     db = get_db()
@@ -1093,6 +1093,56 @@ def edit_time_records():
                             phases=phases,
                             time_records=time_records,
                             last_record_altered=int(data['id']))
+                            
+@app.route('/reports')
+def reports():
+    """For now this returns the results of one kind of query.
+    
+    That'll change.
+    """
+    db = get_db()
+    results = db.execute("""
+        SELECT  sum(strftime('%s', time_record.stop) - strftime('%s', time_record.start)) / 60.0 AS total, 
+                item_type.description AS description
+        FROM    time_record, 
+                action_item, 
+                item_type 
+        WHERE   action_item.id = time_record.action_item_id 
+        AND     action_item.type_id = item_type.id 
+        GROUP BY    action_item.type_id
+        """)
+    return render_template('reports.html',
+                            results=results)
+                            
+@app.route('/reports/run_report', methods=['POST'])
+def run_report():
+    data = {}
+    for k, v in request.form.iteritems():
+        if k in ('start', 'end'):
+            try:
+                data[k] = datetime.datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                return Response('\n'.join([
+                    "'{}' was not a valid datetime.".format(k.capitalize()),
+                    "Valid datetimes are yyyy-mm-dd 24:00:00."
+                    ]), 500)
+    db = get_db()
+    results = db.execute("""
+        SELECT  sum(strftime('%s', time_record.stop) - strftime('%s', time_record.start)) / 60.0 AS total, 
+                item_type.description AS description
+        FROM    time_record, 
+                action_item, 
+                item_type 
+        WHERE   action_item.id = time_record.action_item_id 
+        AND     action_item.type_id = item_type.id 
+        AND     time_record.start 
+            BETWEEN     datetime(:start, 'utc')
+            AND         datetime(:end, 'utc')
+        GROUP BY    action_item.type_id
+        """, data)
+    return render_template('report_results.html',
+                            results=results)
+        
     
 
 #
@@ -1102,4 +1152,4 @@ def edit_time_records():
 if __name__ == '__main__':
     with app.app_context():
         init_db()
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', debug=True)

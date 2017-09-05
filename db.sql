@@ -102,6 +102,12 @@ INSERT into permission (id, url)
 INSERT into permission (id, url)
     VALUES (null, '/profile');
     
+INSERT into permission (id, url)
+    VALUES (null, '/adjustments');
+    
+INSERT into permission (id, url)
+    VALUES (null, '/reports');
+    
 /* non-admin ties will be limited for test purposes */
 
 INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
@@ -112,6 +118,12 @@ INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
 
 INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
     VALUES (null, 1, 3);
+
+INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
+    VALUES (null, 1, 4);
+
+INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
+    VALUES (null, 1, 5);
 
 INSERT into usergroup_permission_tie (id, usergroup_id, permission_id)
     VALUES (null, 2, 2);
