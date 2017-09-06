@@ -1038,6 +1038,11 @@ def edit_password():
         return Response('No match for that password', 500)
     return Response('Password changed, email sent to {}'.format(user['email']), 500)
     
+                            
+#   #
+#   #   Adjustments page
+#   #
+    
 @app.route('/adjustments')
 def adjustments():
     return render_template('adjustments.html')
@@ -1094,25 +1099,56 @@ def edit_time_records():
                             time_records=time_records,
                             last_record_altered=int(data['id']))
                             
+#   #
+#   #   Reports page
+#   #
+
+#####
+#
+#   I must now pay for my sins of rejecting OOP
+#
+#####
+
+ALL_REPORTS = {
+        "Total Time Per Item Type": """
+            SELECT  sum(
+                        strftime('%s', time_record.stop) 
+                        - strftime('%s', time_record.start)
+                    ) 
+                    / 60.0 
+                    AS total, 
+                    item_type.description 
+                    AS description
+            FROM    time_record, 
+                    action_item, 
+                    item_type 
+            WHERE   action_item.id = time_record.action_item_id 
+            AND     action_item.type_id = item_type.id 
+            AND     time_record.start 
+                BETWEEN     datetime(:start, 'utc')
+                AND         datetime(:end, 'utc')
+            GROUP BY    action_item.type_id
+            """
+    }
+                            
 @app.route('/reports')
 def reports():
     """For now this returns the results of one kind of query.
     
     That'll change.
     """
-    db = get_db()
-    results = db.execute("""
-        SELECT  sum(strftime('%s', time_record.stop) - strftime('%s', time_record.start)) / 60.0 AS total, 
-                item_type.description AS description
-        FROM    time_record, 
-                action_item, 
-                item_type 
-        WHERE   action_item.id = time_record.action_item_id 
-        AND     action_item.type_id = item_type.id 
-        GROUP BY    action_item.type_id
-        """)
-    return render_template('reports.html',
-                            results=results)
+    #db = get_db()
+    #results = db.execute("""
+    #    SELECT  sum(strftime('%s', time_record.stop) - strftime('%s', time_record.start)) / 60.0 AS total, 
+    #            item_type.description AS description
+    #    FROM    time_record, 
+    #            action_item, 
+    #            item_type 
+    #    WHERE   action_item.id = time_record.action_item_id 
+    #    AND     action_item.type_id = item_type.id 
+    #    GROUP BY    action_item.type_id
+    #    """)
+    return render_template('reports.html')
                             
 @app.route('/reports/run_report', methods=['POST'])
 def run_report():
@@ -1127,19 +1163,21 @@ def run_report():
                     "Valid datetimes are yyyy-mm-dd 24:00:00."
                     ]), 500)
     db = get_db()
-    results = db.execute("""
-        SELECT  sum(strftime('%s', time_record.stop) - strftime('%s', time_record.start)) / 60.0 AS total, 
-                item_type.description AS description
-        FROM    time_record, 
-                action_item, 
-                item_type 
-        WHERE   action_item.id = time_record.action_item_id 
-        AND     action_item.type_id = item_type.id 
-        AND     time_record.start 
-            BETWEEN     datetime(:start, 'utc')
-            AND         datetime(:end, 'utc')
-        GROUP BY    action_item.type_id
-        """, data)
+    #results = db.execute("""
+    #    SELECT  sum(strftime('%s', time_record.stop) - strftime('%s', time_record.start)) / 60.0 AS total, 
+    #            item_type.description AS description
+    #    FROM    time_record, 
+    #            action_item, 
+    #            item_type 
+    #    WHERE   action_item.id = time_record.action_item_id 
+    #    AND     action_item.type_id = item_type.id 
+    #    AND     time_record.start 
+    #        BETWEEN     datetime(:start, 'utc')
+    #        AND         datetime(:end, 'utc')
+    #    GROUP BY    action_item.type_id
+    #    """, data)
+    report = ALL_REPORTS['Total Time Per Item Type']
+    results = db.execute(report, data)
     return render_template('report_results.html',
                             results=results)
         
