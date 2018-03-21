@@ -1,3 +1,7 @@
+/**
+ * Handlers for the Profile view go here.
+ */
+
 $(document).ready(function(){
     $('button[type=submit]').on('click', function(){
         var $this = $(this);

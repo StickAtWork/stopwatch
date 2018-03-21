@@ -1,7 +1,7 @@
 $(document).ready(function(){    
-    /*  loads ticket into expanded view
-    
-    */
+    /**
+     *   loads ticket into expanded view
+     */
     var $proj_view = $('#project-view');
     
     $proj_view.on('click', "#projects tr", function(){
@@ -36,9 +36,9 @@ $(document).ready(function(){
         });
     });
     
-    /*  timer handler
-    
-    */
+    /**
+     *   timer handler
+     */
     $('#main form#timer').on('submit', function(){
         var fdata = $(this).serializeArray();
         var do_submit = fdata[0]["value"] !== undefined;
@@ -55,6 +55,9 @@ $(document).ready(function(){
     });
     
     
+    /**
+     * Prevents user from going to another view while timing a project.
+     */
     $('.navi li a').on('click', function(e){
         if ($("#currently-timing").length) {
             alert("Don't switch views while timing.");
@@ -62,6 +65,11 @@ $(document).ready(function(){
         }
     });
     
+    /**
+     * Tries to prevent user from closing the window while doing a timing.
+     * I don't think this works on every browser, so it's bad, but it
+     * works on Safari, so it's passable.
+     */
     $(window).on('beforeunload', function(e){
         if ($("#currently-timing").length) {
             //i guess we don't do custom alert messages anymore?
@@ -74,11 +82,11 @@ $(document).ready(function(){
     
     
     
-    /*  handlers for expanded project view
-    
-        just try not to dynamically load #expanded-project, kthx        
-    
-    */
+    /**
+     * Handlers for expanded project view.
+     * These only work if you do not dynamically reload #expanded-project.
+     * This is one of those "man I wish I'd just used ReactJS" moments, right
+     */
     var $exp_proj = $("#expanded-project");
     
     $exp_proj.on('click', ".shutter", function(e){
@@ -137,7 +145,9 @@ $(document).ready(function(){
         });
     });
     
-    
+    /**
+     * Just save button things
+     */
     $exp_proj.on('click', "#new_action_item input[value=Save]", function(event) {
         var $this = $(this);
         var fdata = $this.parent().serializeArray();
@@ -152,10 +162,10 @@ $(document).ready(function(){
     });
     
     
-    /*  set default values for a new action item. most importantly setting the 
-        data-id to -1 to signal the server that it's a new item.
-        
-    */
+    /**
+     * Sets default values for a new action item. 
+     * Most importantly sets the data-id to -1 to signal the server that it's a new item.
+     */
     $exp_proj.on('click', "#new_action_item input[value=New]", function(event) {
         $(this).siblings().each(function(index, el){
             //name, type, rate
@@ -193,6 +203,8 @@ $(document).ready(function(){
         //when we stop timing we have to reload the phases too.
         //this is not the greatest way to do this, but it is
         //A Way To Do This, so yeah.
+        //...yeah, I wish I'd just updated the view based on 
+        // a state object too, but it's too late to go back now
         if ($this.attr('value') === 'Stop Timing') {
             $.ajax({
                 url: 'my_projects/get_phases'
@@ -204,9 +216,9 @@ $(document).ready(function(){
     });
     
     
-    /*  details handlers
-    
-    */
+    /**
+     * Handlers for the details area.
+     */
     $exp_proj.on('change', '#details form', function(){
         var $this = $(this);
         //check if we're trying to close the projects, because
@@ -235,9 +247,9 @@ $(document).ready(function(){
     });
     
     
-    /*  phase editor handlers 
-    
-    */
+    /**
+     * Handlers for the phase editor    
+     */
     $exp_proj.on('click', '#phase-buttons button', function(){
         $.ajax({
             url: $(this).attr("formaction"),
@@ -256,7 +268,8 @@ $(document).ready(function(){
             method: "POST",
             data: $this.attr('value')
         }).success(function(data){
-            //send the data to the popup window
+            //send the data to our hidden popup window,
+            //NOT the browser's alert() window
             $('#popup-window').trigger('appear', [data]);
         });
         return false;

@@ -22,6 +22,7 @@ $(document).ready(function(){
         var $this_row = $(this).parents('tr');
         //can't just use serializeArray() because of how the elements
         //are nested. so this is a lot of code but it works right.
+        //...mumble mumble should have used React mumble
         var fdata = {
             "project-id": $this_row.parents('table').attr('data-project-id'),
             "record-id": $this_row.attr('data-record-id'),

@@ -1,3 +1,7 @@
+/**
+ * Handlers for the Reports view go here.
+ */
+
 $(document).ready(function(){
     $('button[type=submit]').on('click', function(){
         var $this = $(this);
